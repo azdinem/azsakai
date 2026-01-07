@@ -1,0 +1,82 @@
+@import "tailwindcss";
+
+:root {
+  --notion-bg: #ffffff;
+  --notion-bg-secondary: #f7f6f3;
+  --notion-bg-tertiary: #f1f1ef;
+  --notion-text: #37352f;
+  --notion-text-secondary: #787774;
+  --notion-border: #e9e9e7;
+  --notion-accent: #2eaadc;
+  --notion-accent-light: #e7f3f8;
+  --notion-success: #0f7b6c;
+  --notion-success-light: #dbf4ee;
+  --notion-warning: #cb912f;
+  --notion-warning-light: #fdefd8;
+  --notion-error: #e03e3e;
+  --notion-error-light: #ffe2e0;
+}
+
+body {
+  font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol";
+  background-color: var(--notion-bg);
+  color: var(--notion-text);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Scrollbar style Notion */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--notion-border);
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--notion-text-secondary);
+}
+
+/* Custom checkbox style */
+input[type="checkbox"] {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--notion-border);
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+input[type="checkbox"]:checked {
+  background-color: var(--notion-accent);
+  border-color: var(--notion-accent);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z'/%3E%3C/svg%3E");
+  background-size: 12px;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+input[type="checkbox"]:hover {
+  border-color: var(--notion-accent);
+}
+
+/* Focus styles */
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--notion-accent-light), 0 0 0 4px var(--notion-accent);
+}
+
+/* Transitions */
+.transition-notion {
+  transition: all 0.2s ease;
+}
