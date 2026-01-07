@@ -49,12 +49,74 @@ export const INFO_GAIN_SOURCES = [
   { id: 'methodology', label: 'Méthodologie exclusive' },
 ];
 
+// Couleurs par phase
+export const PHASE_COLORS = {
+  phase0: { main: '#8b5cf6', light: '#f5f3ff', dark: '#7c3aed' },
+  phase1: { main: '#3b82f6', light: '#eff6ff', dark: '#2563eb' },
+  phase2: { main: '#06b6d4', light: '#ecfeff', dark: '#0891b2' },
+  phase3: { main: '#6366f1', light: '#eef2ff', dark: '#4f46e5' },
+  phase4: { main: '#10b981', light: '#ecfdf5', dark: '#059669' },
+  phase5: { main: '#f59e0b', light: '#fffbeb', dark: '#d97706' },
+  phase6: { main: '#ec4899', light: '#fdf2f8', dark: '#db2777' },
+  phase7: { main: '#14b8a6', light: '#f0fdfa', dark: '#0d9488' },
+  phase8: { main: '#64748b', light: '#f8fafc', dark: '#475569' },
+};
+
+// Mapping checklist -> champs pour auto-complétion
+export const FIELD_TO_CHECKLIST_MAP = {
+  // Phase 0
+  'main_keyword': 'c0_1_1',
+  'search_volume': 'c0_1_2',
+  'business_objective': 'c0_1_3',
+  'deadline': 'c0_1_4',
+  // Phase 1
+  'reader_profile': 'c1_1_1',
+  'knowledge_level': 'c1_1_2',
+  'main_question': 'c1_1_3',
+  'main_cta': 'c1_1_4',
+  'serp_elements': 'c1_2_2',
+  'serp_analysis': 'c1_2_3',
+  'dominant_format': 'c1_2_4',
+  'framework': 'c1_3_2',
+  'framework_justification': 'c1_3_3',
+  // Phase 2
+  'paa_list': 'c2_1_3',
+  'content_plan': 'c2_2_4',
+  'competitor_terms': 'c2_3_6',
+  'info_gain_sources': 'c2_4_1',
+  // Phase 3
+  'brand_mission': 'c3_1_1',
+  'brand_values': 'c3_1_2',
+  'main_problem': 'c3_1_3',
+  'tone_of_voice': 'c3_1_4',
+  'qbst_terms': 'c3_2_1',
+  'target_length': 'c3_3_1',
+  // Phase 4
+  'body_content': 'c4_1_9',
+  'introduction': 'c4_2_4',
+  'conclusion': 'c4_3_3',
+  'snippet_content': 'c4_4_2',
+  // Phase 5
+  'visuals_list': 'c5_1_1',
+  // Phase 7
+  'internal_links': 'c7_1_1',
+  'external_links': 'c7_2_1',
+  // Phase 8
+  'h1_title': 'c8_1_1',
+  'meta_title': 'c8_1_2',
+  'meta_description': 'c8_1_3',
+  'target_url': 'c8_1_4',
+  'kpis': 'c8_2_1',
+  'smart_objective': 'c8_2_3',
+};
+
 export const PHASES = [
   {
     id: 'phase0',
     number: 0,
     title: 'Cadrage Initial',
     icon: 'Crosshair',
+    color: 'phase0',
     description: 'Définir le mot-clé cible et l\'objectif du contenu',
     steps: [
       {
@@ -91,6 +153,7 @@ export const PHASES = [
     number: 1,
     title: 'Définition du Scope',
     icon: 'Target',
+    color: 'phase1',
     description: 'Définir le cadre, l\'audience et le format du contenu',
     steps: [
       {
@@ -158,6 +221,7 @@ export const PHASES = [
     number: 2,
     title: 'Structuration Sémantique',
     icon: 'LayoutTemplate',
+    color: 'phase2',
     description: 'Construire le plan et identifier les opportunités de valeur ajoutée',
     steps: [
       {
@@ -238,6 +302,7 @@ export const PHASES = [
     number: 3,
     title: 'Préparation à la Rédaction',
     icon: 'ClipboardList',
+    color: 'phase3',
     description: 'Établir le contexte de marque et préparer les éléments sémantiques',
     steps: [
       {
@@ -313,6 +378,7 @@ export const PHASES = [
     number: 4,
     title: 'Rédaction',
     icon: 'PenLine',
+    color: 'phase4',
     description: 'Rédiger le contenu en suivant les bonnes pratiques',
     steps: [
       {
@@ -394,6 +460,7 @@ export const PHASES = [
     number: 5,
     title: 'Mise en Page et Médias',
     icon: 'Image',
+    color: 'phase5',
     description: 'Intégrer les visuels et optimiser la scannabilité',
     steps: [
       {
@@ -436,6 +503,7 @@ export const PHASES = [
     number: 6,
     title: 'Relecture et Contrôle Qualité',
     icon: 'CheckCircle',
+    color: 'phase6',
     description: 'Vérifier la qualité, l\'EEAT et éliminer les éléments nuisibles',
     steps: [
       {
@@ -491,6 +559,7 @@ export const PHASES = [
     number: 7,
     title: 'Maillage Interne',
     icon: 'Link',
+    color: 'phase7',
     description: 'Structurer les liens internes et vérifier les liens externes',
     steps: [
       {
@@ -534,6 +603,7 @@ export const PHASES = [
     number: 8,
     title: 'Publication et Mesure',
     icon: 'BarChart3',
+    color: 'phase8',
     description: 'Préparer la publication et définir les KPIs de suivi',
     steps: [
       {
