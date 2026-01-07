@@ -1,9 +1,9 @@
-// Données du processus de rédaction SEO - 8 phases, ~20 étapes
+// Données du processus de rédaction SEO - 9 phases (0-8), ~21 étapes
 // Basé sur la méthodologie Thot SEO
 
 export const CONTENT_TYPES = [
-  { id: 'article', label: 'Article', icon: '📄' },
-  { id: 'landing', label: 'Landing Page', icon: '🎯' },
+  { id: 'article', label: 'Article', icon: 'FileText' },
+  { id: 'landing', label: 'Landing Page', icon: 'Target' },
 ];
 
 export const READER_PROFILES = [
@@ -51,10 +51,46 @@ export const INFO_GAIN_SOURCES = [
 
 export const PHASES = [
   {
+    id: 'phase0',
+    number: 0,
+    title: 'Cadrage Initial',
+    icon: 'Crosshair',
+    description: 'Définir le mot-clé cible et l\'objectif du contenu',
+    steps: [
+      {
+        id: 'step0_1',
+        number: '0.1',
+        title: 'Définir le mot-clé et l\'objectif',
+        objective: 'Poser les bases du projet de contenu : mot-clé cible, objectif business et deadline.',
+        deliverable: 'Fiche de cadrage complétée',
+        checklist: [
+          { id: 'c0_1_1', label: 'Mot-clé principal défini' },
+          { id: 'c0_1_2', label: 'Volume de recherche vérifié' },
+          { id: 'c0_1_3', label: 'Objectif business identifié' },
+          { id: 'c0_1_4', label: 'Deadline de publication fixée' },
+        ],
+        fields: [
+          { id: 'main_keyword', type: 'text', label: 'Mot-clé principal', placeholder: 'Ex: création de contenu SEO' },
+          { id: 'secondary_keywords', type: 'textarea', label: 'Mots-clés secondaires', placeholder: 'Un mot-clé par ligne', rows: 3 },
+          { id: 'search_volume', type: 'text', label: 'Volume de recherche mensuel', placeholder: 'Ex: 1 200' },
+          { id: 'business_objective', type: 'select', label: 'Objectif business', options: [
+            { id: 'traffic', label: 'Générer du trafic qualifié' },
+            { id: 'leads', label: 'Générer des leads' },
+            { id: 'sales', label: 'Générer des ventes' },
+            { id: 'awareness', label: 'Développer la notoriété' },
+            { id: 'authority', label: 'Établir l\'expertise / autorité' },
+          ]},
+          { id: 'deadline', type: 'date', label: 'Deadline de publication' },
+          { id: 'notes', type: 'textarea', label: 'Notes complémentaires', rows: 3 },
+        ],
+      },
+    ],
+  },
+  {
     id: 'phase1',
     number: 1,
     title: 'Définition du Scope',
-    icon: '🎯',
+    icon: 'Target',
     description: 'Définir le cadre, l\'audience et le format du contenu',
     steps: [
       {
@@ -93,7 +129,6 @@ export const PHASES = [
           { id: 'c1_2_4', label: 'Identifier le format dominant' },
         ],
         fields: [
-          { id: 'main_keyword', type: 'text', label: 'Mot-clé principal' },
           { id: 'serp_elements', type: 'multicheck', label: 'Éléments enrichis présents', options: 'SERP_ELEMENTS' },
           { id: 'serp_analysis', type: 'table', label: 'Analyse des 5 premiers résultats', columns: ['Position', 'Type de contenu', 'Longueur estimée', 'Format dominant', 'Angle principal'] },
           { id: 'dominant_format', type: 'select', label: 'Format dominant identifié', options: 'CONTENT_FORMATS' },
@@ -122,7 +157,7 @@ export const PHASES = [
     id: 'phase2',
     number: 2,
     title: 'Structuration Sémantique',
-    icon: '🏗️',
+    icon: 'LayoutTemplate',
     description: 'Construire le plan et identifier les opportunités de valeur ajoutée',
     steps: [
       {
@@ -154,7 +189,7 @@ export const PHASES = [
           { id: 'c2_2_4', label: 'Organiser les sections dans un ordre logique' },
         ],
         fields: [
-          { id: 'content_plan', type: 'textarea', label: 'Plan structuré (H1, H2, H3)', placeholder: '# Titre H1\n\n## H2 : Section 1\n### H3 : Sous-section\n\n## H2 : Section 2\n...' },
+          { id: 'content_plan', type: 'textarea', label: 'Plan structuré (H1, H2, H3)', placeholder: '# Titre H1\n\n## H2 : Section 1\n### H3 : Sous-section\n\n## H2 : Section 2\n...', rows: 12 },
           { id: 'plan_order', type: 'select', label: 'Type d\'organisation', options: [
             { id: 'general_particular', label: 'Du général au particulier' },
             { id: 'chronological', label: 'Chronologique' },
@@ -202,7 +237,7 @@ export const PHASES = [
     id: 'phase3',
     number: 3,
     title: 'Préparation à la Rédaction',
-    icon: '📋',
+    icon: 'ClipboardList',
     description: 'Établir le contexte de marque et préparer les éléments sémantiques',
     steps: [
       {
@@ -249,7 +284,7 @@ export const PHASES = [
           { id: 'c3_2_4', label: 'Plan d\'intégration naturelle défini' },
         ],
         fields: [
-          { id: 'qbst_terms', type: 'textarea', label: 'Termes saillants à intégrer', placeholder: 'Mot-clé principal: ...\nSynonymes: ...\nTermes associés: ...\nEntités liées: ...' },
+          { id: 'qbst_terms', type: 'textarea', label: 'Termes saillants à intégrer', placeholder: 'Synonymes: ...\nTermes associés: ...\nEntités liées: ...', rows: 6 },
         ],
       },
       {
@@ -268,7 +303,7 @@ export const PHASES = [
             { id: 'short', label: 'Court (<1200 mots) - Rédaction one shot' },
             { id: 'long', label: 'Long (>1200 mots) - Rédaction section par section' },
           ]},
-          { id: 'section_planning', type: 'textarea', label: 'Planning des sections (ordre de rédaction, mots estimés par section)', placeholder: 'Introduction: 100-150 mots (dernière)\nSection 1: XXX mots (1er)\nSection 2: XXX mots (2ème)\n...' },
+          { id: 'section_planning', type: 'textarea', label: 'Planning des sections', placeholder: 'Introduction: 100-150 mots (dernière)\nSection 1: XXX mots (1er)\nSection 2: XXX mots (2ème)\n...', rows: 6 },
         ],
       },
     ],
@@ -277,7 +312,7 @@ export const PHASES = [
     id: 'phase4',
     number: 4,
     title: 'Rédaction',
-    icon: '✍️',
+    icon: 'PenLine',
     description: 'Rédiger le contenu en suivant les bonnes pratiques',
     steps: [
       {
@@ -349,7 +384,7 @@ export const PHASES = [
             { id: 'list', label: 'Liste (5-8 items sous H2 "Comment..." ou "Les X étapes...")' },
             { id: 'table', label: 'Tableau (comparatif sous H2 "Comparaison..." ou "Différences...")' },
           ]},
-          { id: 'snippet_content', type: 'textarea', label: 'Contenu optimisé pour le snippet' },
+          { id: 'snippet_content', type: 'textarea', label: 'Contenu optimisé pour le snippet', rows: 6 },
         ],
       },
     ],
@@ -358,7 +393,7 @@ export const PHASES = [
     id: 'phase5',
     number: 5,
     title: 'Mise en Page et Médias',
-    icon: '🎨',
+    icon: 'Image',
     description: 'Intégrer les visuels et optimiser la scannabilité',
     steps: [
       {
@@ -376,7 +411,7 @@ export const PHASES = [
           { id: 'c5_1_6', label: 'Images compressées (<100Ko si possible)' },
         ],
         fields: [
-          { id: 'visuals_list', type: 'textarea', label: 'Liste des visuels à intégrer', placeholder: '1. [Section] - Type de visuel - Description - Alt text prévu\n2. ...' },
+          { id: 'visuals_list', type: 'textarea', label: 'Liste des visuels à intégrer', placeholder: '1. [Section] - Type de visuel - Description - Alt text prévu\n2. ...', rows: 6 },
         ],
       },
       {
@@ -400,7 +435,7 @@ export const PHASES = [
     id: 'phase6',
     number: 6,
     title: 'Relecture et Contrôle Qualité',
-    icon: '✅',
+    icon: 'CheckCircle',
     description: 'Vérifier la qualité, l\'EEAT et éliminer les éléments nuisibles',
     steps: [
       {
@@ -430,7 +465,7 @@ export const PHASES = [
           { id: 'c6_2_4', label: 'Confiance: Les affirmations sont vérifiables' },
         ],
         fields: [
-          { id: 'eeat_notes', type: 'textarea', label: 'Notes d\'amélioration EEAT', placeholder: 'Expertise: ...\nExpérience: ...\nAutorité: ...\nConfiance: ...' },
+          { id: 'eeat_notes', type: 'textarea', label: 'Notes d\'amélioration EEAT', placeholder: 'Expertise: ...\nExpérience: ...\nAutorité: ...\nConfiance: ...', rows: 6 },
         ],
       },
       {
@@ -455,7 +490,7 @@ export const PHASES = [
     id: 'phase7',
     number: 7,
     title: 'Maillage Interne',
-    icon: '🔗',
+    icon: 'Link',
     description: 'Structurer les liens internes et vérifier les liens externes',
     steps: [
       {
@@ -472,8 +507,8 @@ export const PHASES = [
           { id: 'c7_1_5', label: 'Pages existantes à mettre à jour identifiées' },
         ],
         fields: [
-          { id: 'internal_links', type: 'textarea', label: 'Liens internes prévus', placeholder: 'Terme/Concept | Page cible | Ancre prévue\n...' },
-          { id: 'pages_to_update', type: 'textarea', label: 'Pages existantes à mettre à jour (qui devraient pointer vers ce contenu)' },
+          { id: 'internal_links', type: 'textarea', label: 'Liens internes prévus', placeholder: 'Terme/Concept | Page cible | Ancre prévue\n...', rows: 6 },
+          { id: 'pages_to_update', type: 'textarea', label: 'Pages existantes à mettre à jour', rows: 4 },
         ],
       },
       {
@@ -489,7 +524,7 @@ export const PHASES = [
           { id: 'c7_2_4', label: 'Toutes les pages cibles sont toujours en ligne et à jour' },
         ],
         fields: [
-          { id: 'external_links', type: 'textarea', label: 'Liens externes utilisés', placeholder: 'URL | Source fiable? | Nouvel onglet? | Pertinence\n...' },
+          { id: 'external_links', type: 'textarea', label: 'Liens externes utilisés', placeholder: 'URL | Source fiable? | Nouvel onglet? | Pertinence\n...', rows: 6 },
         ],
       },
     ],
@@ -498,7 +533,7 @@ export const PHASES = [
     id: 'phase8',
     number: 8,
     title: 'Publication et Mesure',
-    icon: '📊',
+    icon: 'BarChart3',
     description: 'Préparer la publication et définir les KPIs de suivi',
     steps: [
       {
@@ -522,9 +557,9 @@ export const PHASES = [
           { id: 'h1_title', type: 'text', label: 'Titre H1' },
           { id: 'meta_title', type: 'text', label: 'Meta title (50-60 car.)', maxLength: 60 },
           { id: 'meta_description', type: 'textarea', label: 'Meta description (150-160 car.)', maxLength: 160, rows: 2 },
-          { id: 'target_url', type: 'text', label: 'URL cible' },
+          { id: 'target_url', type: 'text', label: 'URL de publication' },
           { id: 'author', type: 'text', label: 'Auteur' },
-          { id: 'publication_date', type: 'date', label: 'Date de publication prévue' },
+          { id: 'publication_date', type: 'date', label: 'Date de publication' },
         ],
       },
       {
@@ -545,8 +580,8 @@ export const PHASES = [
             { id: 'engagement', label: 'Engagement' },
             { id: 'conversion', label: 'Conversion' },
           ]},
-          { id: 'kpis', type: 'textarea', label: 'KPIs à suivre', placeholder: 'Position moyenne: ...\nImpressions: ...\nSessions: ...\nTaux de conversion: ...' },
-          { id: 'smart_objective', type: 'textarea', label: 'Objectif SMART', placeholder: 'Spécifique: ...\nMesurable: ...\nAtteignable: ...\nRéaliste: ...\nTemporel: ...' },
+          { id: 'kpis', type: 'textarea', label: 'KPIs à suivre', placeholder: 'Position moyenne: ...\nImpressions: ...\nSessions: ...\nTaux de conversion: ...', rows: 6 },
+          { id: 'smart_objective', type: 'textarea', label: 'Objectif SMART', placeholder: 'Spécifique: ...\nMesurable: ...\nAtteignable: ...\nRéaliste: ...\nTemporel: ...', rows: 6 },
         ],
       },
     ],

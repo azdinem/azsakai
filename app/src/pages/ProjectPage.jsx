@@ -13,6 +13,44 @@ import {
   calculatePhaseProgress,
   calculateStepProgress,
 } from '../data/processData';
+import {
+  FileText,
+  Target,
+  Crosshair,
+  LayoutTemplate,
+  ClipboardList,
+  PenLine,
+  Image,
+  CheckCircle,
+  Link,
+  BarChart3,
+  ChevronLeft,
+  ChevronRight,
+  ChevronDown,
+  ChevronUp,
+  Check,
+  Package,
+  Download,
+} from '../components/Icons';
+
+// Map des icônes pour les phases
+const phaseIcons = {
+  Crosshair,
+  Target,
+  LayoutTemplate,
+  ClipboardList,
+  PenLine,
+  Image,
+  CheckCircle,
+  Link,
+  BarChart3,
+};
+
+// Map des icônes pour les types de contenu
+const typeIcons = {
+  article: FileText,
+  landing: Target,
+};
 
 export default function ProjectPage() {
   const { id } = useParams();
@@ -20,19 +58,19 @@ export default function ProjectPage() {
   const { getProject, updateProject, updateProjectField, toggleChecklistItem, exportProjectMarkdown } = useData();
 
   const [project, setProject] = useState(null);
-  const [activePhase, setActivePhase] = useState('phase1');
-  const [activeStep, setActiveStep] = useState('step1_1');
+  const [activePhase, setActivePhase] = useState('phase0');
+  const [activeStep, setActiveStep] = useState('step0_1');
+  const [expandedSections, setExpandedSections] = useState({ checklist: true, documentation: true });
 
   useEffect(() => {
     const p = getProject(id);
     if (p) {
       setProject(p);
-      setActivePhase(p.currentPhase || 'phase1');
-      setActiveStep(p.currentStep || 'step1_1');
+      setActivePhase(p.currentPhase || 'phase0');
+      setActiveStep(p.currentStep || 'step0_1');
     }
   }, [id, getProject]);
 
-  // Mettre à jour le projet quand les données changent dans le contexte
   useEffect(() => {
     const p = getProject(id);
     if (p) {
@@ -42,8 +80,8 @@ export default function ProjectPage() {
 
   if (!project) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-[var(--notion-text-secondary)]">Projet non trouvé</p>
+      <div className="min-h-screen flex items-center justify-center bg-[var(--color-bg)]">
+        <p className="text-[var(--color-text-secondary)]">Projet non trouvé</p>
       </div>
     );
   }
@@ -78,6 +116,10 @@ export default function ProjectPage() {
     updateProject(id, { title: newTitle });
   };
 
+  const toggleSection = (section) => {
+    setExpandedSections(prev => ({ ...prev, [section]: !prev[section] }));
+  };
+
   const getFieldOptions = (optionsRef) => {
     if (typeof optionsRef === 'string') {
       switch (optionsRef) {
@@ -92,6 +134,11 @@ export default function ProjectPage() {
     return optionsRef || [];
   };
 
+  const getPhaseIcon = (iconName) => {
+    const IconComponent = phaseIcons[iconName];
+    return IconComponent ? <IconComponent size={16} /> : null;
+  };
+
   const renderField = (field) => {
     const value = project.fields?.[field.id] || '';
     const options = getFieldOptions(field.options);
@@ -103,7 +150,7 @@ export default function ProjectPage() {
             type="text"
             value={value}
             onChange={(e) => handleFieldChange(field.id, e.target.value)}
-            className="w-full px-3 py-2 border border-[var(--notion-border)] rounded-md text-[var(--notion-text)] bg-white"
+            className="w-full"
             placeholder={field.placeholder}
             maxLength={field.maxLength}
           />
@@ -114,7 +161,7 @@ export default function ProjectPage() {
           <textarea
             value={value}
             onChange={(e) => handleFieldChange(field.id, e.target.value)}
-            className="w-full px-3 py-2 border border-[var(--notion-border)] rounded-md text-[var(--notion-text)] bg-white resize-y"
+            className="w-full resize-y"
             placeholder={field.placeholder}
             rows={field.rows || 4}
             maxLength={field.maxLength}
@@ -126,7 +173,7 @@ export default function ProjectPage() {
           <select
             value={value}
             onChange={(e) => handleFieldChange(field.id, e.target.value)}
-            className="w-full px-3 py-2 border border-[var(--notion-border)] rounded-md text-[var(--notion-text)] bg-white"
+            className="w-full"
           >
             <option value="">Sélectionner...</option>
             {options.map(opt => (
@@ -138,9 +185,9 @@ export default function ProjectPage() {
       case 'multicheck':
         const selectedValues = value ? (Array.isArray(value) ? value : [value]) : [];
         return (
-          <div className="space-y-2">
+          <div className="space-y-2 p-3 bg-[var(--color-bg-secondary)] rounded-lg">
             {options.map(opt => (
-              <label key={opt.id} className="flex items-start gap-3 cursor-pointer">
+              <label key={opt.id} className="flex items-start gap-3 cursor-pointer p-2 hover:bg-[var(--color-bg)] rounded-md transition-colors">
                 <input
                   type="checkbox"
                   checked={selectedValues.includes(opt.id)}
@@ -152,9 +199,9 @@ export default function ProjectPage() {
                   }}
                   className="mt-0.5"
                 />
-                <span className="text-sm text-[var(--notion-text)]">
+                <span className="text-[var(--text-base)] text-[var(--color-text)]">
                   {opt.label}
-                  {opt.subLabel && <span className="text-[var(--notion-text-secondary)]"> {opt.subLabel}</span>}
+                  {opt.subLabel && <span className="text-[var(--color-text-secondary)]"> {opt.subLabel}</span>}
                 </span>
               </label>
             ))}
@@ -167,7 +214,7 @@ export default function ProjectPage() {
             type="date"
             value={value}
             onChange={(e) => handleFieldChange(field.id, e.target.value)}
-            className="w-full px-3 py-2 border border-[var(--notion-border)] rounded-md text-[var(--notion-text)] bg-white"
+            className="w-full"
           />
         );
 
@@ -178,9 +225,9 @@ export default function ProjectPage() {
           <textarea
             value={value}
             onChange={(e) => handleFieldChange(field.id, e.target.value)}
-            className="w-full px-3 py-2 border border-[var(--notion-border)] rounded-md text-[var(--notion-text)] bg-white font-mono text-sm resize-y"
+            className="w-full font-mono text-[var(--text-sm)] resize-y"
             placeholder={field.columns ? field.columns.join(' | ') + '\n---\n...' : field.placeholder}
-            rows={6}
+            rows={field.rows || 6}
           />
         );
 
@@ -190,198 +237,216 @@ export default function ProjectPage() {
             type="text"
             value={value}
             onChange={(e) => handleFieldChange(field.id, e.target.value)}
-            className="w-full px-3 py-2 border border-[var(--notion-border)] rounded-md text-[var(--notion-text)] bg-white"
+            className="w-full"
           />
         );
     }
   };
 
+  const TypeIcon = typeIcons[project.type] || FileText;
+
   return (
-    <div className="min-h-screen bg-[var(--notion-bg)] flex flex-col">
+    <div className="min-h-screen bg-[var(--color-bg)] flex flex-col">
       {/* Header */}
-      <header className="border-b border-[var(--notion-border)] bg-white sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-6 py-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
+      <header className="border-b border-[var(--color-border)] bg-[var(--color-bg)] sticky top-0 z-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3 flex-1 min-w-0">
               <button
                 onClick={() => navigate('/')}
-                className="p-2 hover:bg-[var(--notion-bg-secondary)] rounded-md text-[var(--notion-text-secondary)]"
+                className="p-2 hover:bg-[var(--color-bg-secondary)] rounded-lg text-[var(--color-text-secondary)] transition-colors flex-shrink-0"
               >
-                ← Retour
+                <ChevronLeft size={20} />
               </button>
-              <div className="flex items-center gap-2">
-                <span className="text-xl">{CONTENT_TYPES.find(t => t.id === project.type)?.icon}</span>
-                <input
-                  type="text"
-                  value={project.title}
-                  onChange={(e) => handleTitleChange(e.target.value)}
-                  className="text-lg font-semibold text-[var(--notion-text)] bg-transparent border-none focus:outline-none focus:ring-0"
-                />
+              <div className="w-8 h-8 bg-[var(--color-bg-secondary)] rounded-lg flex items-center justify-center flex-shrink-0 text-[var(--color-text-secondary)]">
+                <TypeIcon size={18} />
               </div>
+              <input
+                type="text"
+                value={project.title}
+                onChange={(e) => handleTitleChange(e.target.value)}
+                className="text-[var(--text-lg)] font-semibold text-[var(--color-text)] bg-transparent border-none focus:outline-none focus:ring-0 min-w-0 flex-1"
+                style={{ fontFamily: 'var(--font-heading)' }}
+              />
             </div>
 
-            <div className="flex items-center gap-4">
-              <div className="text-sm text-[var(--notion-text-secondary)]">
-                Progression: <span className="font-medium text-[var(--notion-text)]">{overallProgress}%</span>
-              </div>
-              <div className="w-32 h-2 bg-[var(--notion-bg-tertiary)] rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-[var(--notion-success)] rounded-full transition-all"
-                  style={{ width: `${overallProgress}%` }}
-                />
+            <div className="flex items-center gap-4 flex-shrink-0">
+              <div className="hidden sm:flex items-center gap-3">
+                <span className="text-[var(--text-sm)] text-[var(--color-text-secondary)]">
+                  {overallProgress}%
+                </span>
+                <div className="w-24 h-2 bg-[var(--color-bg-tertiary)] rounded-full overflow-hidden">
+                  <div
+                    className="h-full rounded-full transition-all"
+                    style={{
+                      width: `${overallProgress}%`,
+                      backgroundColor: overallProgress === 100 ? 'var(--color-success)' : 'var(--color-accent)'
+                    }}
+                  />
+                </div>
               </div>
               <button
                 onClick={() => exportProjectMarkdown(id)}
-                className="px-3 py-1.5 text-sm text-[var(--notion-text-secondary)] hover:bg-[var(--notion-bg-secondary)] rounded-md"
+                className="p-2 text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)] rounded-lg transition-colors"
+                title="Exporter en Markdown"
               >
-                📄 Export MD
+                <Download size={18} />
               </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Phase Tabs */}
+        <div className="border-t border-[var(--color-border)] overflow-x-auto">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6">
+            <div className="flex">
+              {PHASES.map(phase => {
+                const phaseProgress = calculatePhaseProgress(project, phase);
+                const isActive = activePhase === phase.id;
+
+                return (
+                  <button
+                    key={phase.id}
+                    onClick={() => handlePhaseChange(phase.id)}
+                    className={`flex items-center gap-2 px-4 py-3 border-b-2 transition-colors whitespace-nowrap text-[var(--text-sm)] ${
+                      isActive
+                        ? 'border-[var(--color-accent)] text-[var(--color-accent)]'
+                        : 'border-transparent text-[var(--color-text-secondary)] hover:text-[var(--color-text)]'
+                    }`}
+                    style={{ fontFamily: 'var(--font-heading)' }}
+                  >
+                    {getPhaseIcon(phase.icon)}
+                    <span className="hidden sm:inline">{phase.number}.</span>
+                    <span className="hidden md:inline">{phase.title}</span>
+                    <span className="md:hidden">P{phase.number}</span>
+                    {phaseProgress === 100 && (
+                      <Check size={14} className="text-[var(--color-success)]" />
+                    )}
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>
       </header>
 
-      <div className="flex-1 flex">
-        {/* Sidebar - Phases */}
-        <aside className="w-64 border-r border-[var(--notion-border)] bg-[var(--notion-bg-secondary)] overflow-y-auto">
-          <nav className="p-4">
-            {PHASES.map(phase => {
-              const phaseProgress = calculatePhaseProgress(project, phase);
-              const isActive = activePhase === phase.id;
+      <div className="flex-1 flex flex-col lg:flex-row">
+        {/* Steps Sidebar */}
+        <aside className="lg:w-64 border-b lg:border-b-0 lg:border-r border-[var(--color-border)] bg-[var(--color-bg-secondary)] overflow-x-auto lg:overflow-y-auto">
+          <div className="flex lg:flex-col p-2 lg:p-4 gap-1">
+            {currentPhase?.steps.map(step => {
+              const stepProgress = calculateStepProgress(project, step);
+              const isStepActive = activeStep === step.id;
 
               return (
-                <div key={phase.id} className="mb-2">
-                  <button
-                    onClick={() => handlePhaseChange(phase.id)}
-                    className={`w-full text-left p-3 rounded-md transition-colors ${
-                      isActive
-                        ? 'bg-white shadow-sm'
-                        : 'hover:bg-[var(--notion-bg-tertiary)]'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span>{phase.icon}</span>
-                        <span className={`text-sm font-medium ${isActive ? 'text-[var(--notion-text)]' : 'text-[var(--notion-text-secondary)]'}`}>
-                          Phase {phase.number}
-                        </span>
-                      </div>
-                      <span className={`text-xs ${phaseProgress === 100 ? 'text-[var(--notion-success)]' : 'text-[var(--notion-text-secondary)]'}`}>
-                        {phaseProgress}%
-                      </span>
-                    </div>
-                    <div className="text-xs text-[var(--notion-text-secondary)] mt-1 truncate">
-                      {phase.title}
-                    </div>
-                  </button>
-
-                  {/* Steps */}
-                  {isActive && (
-                    <div className="ml-4 mt-2 space-y-1">
-                      {phase.steps.map(step => {
-                        const stepProgress = calculateStepProgress(project, step);
-                        const isStepActive = activeStep === step.id;
-
-                        return (
-                          <button
-                            key={step.id}
-                            onClick={() => handleStepChange(step.id)}
-                            className={`w-full text-left px-3 py-2 rounded-md text-sm transition-colors ${
-                              isStepActive
-                                ? 'bg-[var(--notion-accent-light)] text-[var(--notion-accent)]'
-                                : 'text-[var(--notion-text-secondary)] hover:bg-white'
-                            }`}
-                          >
-                            <div className="flex items-center justify-between">
-                              <span className="truncate">{step.number}</span>
-                              {stepProgress === 100 && <span className="text-[var(--notion-success)]">✓</span>}
-                            </div>
-                          </button>
-                        );
-                      })}
-                    </div>
+                <button
+                  key={step.id}
+                  onClick={() => handleStepChange(step.id)}
+                  className={`flex items-center gap-2 px-3 py-2.5 rounded-lg text-[var(--text-sm)] transition-colors whitespace-nowrap lg:whitespace-normal lg:text-left ${
+                    isStepActive
+                      ? 'bg-[var(--color-accent-light)] text-[var(--color-accent)]'
+                      : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-bg)] hover:text-[var(--color-text)]'
+                  }`}
+                  style={{ fontFamily: 'var(--font-heading)' }}
+                >
+                  <span className="font-medium">{step.number}</span>
+                  <span className="hidden lg:inline flex-1 truncate">{step.title}</span>
+                  {stepProgress === 100 && (
+                    <Check size={14} className="text-[var(--color-success)] flex-shrink-0" />
                   )}
-                </div>
+                </button>
               );
             })}
-          </nav>
+          </div>
         </aside>
 
         {/* Main Content */}
         <main className="flex-1 overflow-y-auto">
           {currentStep && (
-            <div className="max-w-3xl mx-auto p-8">
+            <div className="max-w-3xl mx-auto p-6 lg:p-8">
               {/* Step Header */}
-              <div className="mb-8">
-                <div className="flex items-center gap-2 text-sm text-[var(--notion-text-secondary)] mb-2">
-                  <span>{currentPhase?.icon}</span>
-                  <span>Phase {currentPhase?.number}: {currentPhase?.title}</span>
-                  <span>→</span>
-                  <span>Étape {currentStep.number}</span>
-                </div>
-                <h2 className="text-2xl font-semibold text-[var(--notion-text)] mb-2">
+              <div className="mb-6">
+                <h2 className="text-[var(--text-xl)] font-semibold text-[var(--color-text)] mb-2" style={{ fontFamily: 'var(--font-heading)' }}>
                   {currentStep.title}
                 </h2>
-                <p className="text-[var(--notion-text-secondary)]">
+                <p className="text-[var(--text-base)] text-[var(--color-text-secondary)]">
                   {currentStep.objective}
                 </p>
               </div>
 
-              {/* Checklist */}
-              <div className="mb-8">
-                <h3 className="text-sm font-medium text-[var(--notion-text)] uppercase tracking-wide mb-4">
-                  Checklist
-                </h3>
-                <div className="space-y-3">
-                  {currentStep.checklist.map(check => (
-                    <label
-                      key={check.id}
-                      className="flex items-start gap-3 p-3 rounded-md hover:bg-[var(--notion-bg-secondary)] cursor-pointer transition-colors"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={project.checklist?.[check.id] || false}
-                        onChange={() => handleCheckToggle(check.id)}
-                        className="mt-0.5"
-                      />
-                      <span className={`text-sm ${project.checklist?.[check.id] ? 'text-[var(--notion-text-secondary)] line-through' : 'text-[var(--notion-text)]'}`}>
-                        {check.label}
-                      </span>
-                    </label>
-                  ))}
-                </div>
-              </div>
+              {/* Checklist Section */}
+              <div className="mb-6">
+                <button
+                  onClick={() => toggleSection('checklist')}
+                  className="w-full flex items-center justify-between p-3 bg-[var(--color-bg-secondary)] rounded-lg hover:bg-[var(--color-bg-tertiary)] transition-colors"
+                >
+                  <span className="text-[var(--text-sm)] font-medium text-[var(--color-text)] uppercase tracking-wide" style={{ fontFamily: 'var(--font-heading)' }}>
+                    Checklist ({currentStep.checklist.filter(c => project.checklist?.[c.id]).length}/{currentStep.checklist.length})
+                  </span>
+                  {expandedSections.checklist ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                </button>
 
-              {/* Fields */}
-              {currentStep.fields && currentStep.fields.length > 0 && (
-                <div className="mb-8">
-                  <h3 className="text-sm font-medium text-[var(--notion-text)] uppercase tracking-wide mb-4">
-                    Documentation
-                  </h3>
-                  <div className="space-y-6">
-                    {currentStep.fields.map(field => (
-                      <div key={field.id}>
-                        <label className="block text-sm font-medium text-[var(--notion-text)] mb-2">
-                          {field.label}
-                        </label>
-                        {renderField(field)}
-                      </div>
+                {expandedSections.checklist && (
+                  <div className="mt-3 space-y-2">
+                    {currentStep.checklist.map(check => (
+                      <label
+                        key={check.id}
+                        className="flex items-start gap-3 p-3 rounded-lg hover:bg-[var(--color-bg-secondary)] cursor-pointer transition-colors"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={project.checklist?.[check.id] || false}
+                          onChange={() => handleCheckToggle(check.id)}
+                          className="mt-0.5"
+                        />
+                        <span className={`text-[var(--text-base)] ${project.checklist?.[check.id] ? 'text-[var(--color-text-secondary)] line-through' : 'text-[var(--color-text)]'}`}>
+                          {check.label}
+                        </span>
+                      </label>
                     ))}
                   </div>
+                )}
+              </div>
+
+              {/* Documentation Section */}
+              {currentStep.fields && currentStep.fields.length > 0 && (
+                <div className="mb-6">
+                  <button
+                    onClick={() => toggleSection('documentation')}
+                    className="w-full flex items-center justify-between p-3 bg-[var(--color-bg-secondary)] rounded-lg hover:bg-[var(--color-bg-tertiary)] transition-colors"
+                  >
+                    <span className="text-[var(--text-sm)] font-medium text-[var(--color-text)] uppercase tracking-wide" style={{ fontFamily: 'var(--font-heading)' }}>
+                      Documentation
+                    </span>
+                    {expandedSections.documentation ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                  </button>
+
+                  {expandedSections.documentation && (
+                    <div className="mt-4 space-y-5">
+                      {currentStep.fields.map(field => (
+                        <div key={field.id}>
+                          <label className="block text-[var(--text-sm)] font-medium text-[var(--color-text)] mb-2" style={{ fontFamily: 'var(--font-heading)' }}>
+                            {field.label}
+                          </label>
+                          {renderField(field)}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
 
               {/* Deliverable */}
-              <div className="p-4 bg-[var(--notion-bg-secondary)] rounded-lg">
-                <div className="flex items-center gap-2 text-sm">
-                  <span>📦</span>
-                  <span className="font-medium text-[var(--notion-text)]">Livrable:</span>
-                  <span className="text-[var(--notion-text-secondary)]">{currentStep.deliverable}</span>
+              <div className="p-4 bg-[var(--color-bg-secondary)] rounded-lg flex items-start gap-3">
+                <Package size={18} className="text-[var(--color-text-secondary)] flex-shrink-0 mt-0.5" />
+                <div>
+                  <span className="text-[var(--text-sm)] font-medium text-[var(--color-text)]" style={{ fontFamily: 'var(--font-heading)' }}>Livrable</span>
+                  <p className="text-[var(--text-base)] text-[var(--color-text-secondary)]">{currentStep.deliverable}</p>
                 </div>
               </div>
 
               {/* Navigation */}
-              <div className="flex justify-between mt-8 pt-8 border-t border-[var(--notion-border)]">
+              <div className="flex justify-between mt-8 pt-6 border-t border-[var(--color-border)]">
                 {(() => {
                   const allSteps = PHASES.flatMap(p => p.steps.map(s => ({ ...s, phaseId: p.id })));
                   const currentIndex = allSteps.findIndex(s => s.id === activeStep);
@@ -397,9 +462,10 @@ export default function ProjectPage() {
                             setActiveStep(prevStep.id);
                             updateProject(id, { currentPhase: prevStep.phaseId, currentStep: prevStep.id });
                           }}
-                          className="px-4 py-2 text-[var(--notion-text-secondary)] hover:bg-[var(--notion-bg-secondary)] rounded-md"
+                          className="flex items-center gap-2 px-4 py-2.5 text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)] rounded-lg transition-colors text-[var(--text-base)]"
                         >
-                          ← {prevStep.number} {prevStep.title}
+                          <ChevronLeft size={18} />
+                          <span className="hidden sm:inline">{prevStep.number}</span>
                         </button>
                       ) : <div />}
                       {nextStep ? (
@@ -409,13 +475,16 @@ export default function ProjectPage() {
                             setActiveStep(nextStep.id);
                             updateProject(id, { currentPhase: nextStep.phaseId, currentStep: nextStep.id });
                           }}
-                          className="px-4 py-2 bg-[var(--notion-text)] text-white rounded-md font-medium hover:opacity-90"
+                          className="flex items-center gap-2 px-4 py-2.5 bg-[var(--color-text)] text-white rounded-lg font-medium hover:opacity-90 transition-opacity text-[var(--text-base)]"
+                          style={{ fontFamily: 'var(--font-heading)' }}
                         >
-                          {nextStep.number} {nextStep.title} →
+                          <span>Suivant</span>
+                          <ChevronRight size={18} />
                         </button>
                       ) : (
-                        <div className="px-4 py-2 bg-[var(--notion-success)] text-white rounded-md font-medium">
-                          ✓ Processus terminé
+                        <div className="flex items-center gap-2 px-4 py-2.5 bg-[var(--color-success)] text-white rounded-lg font-medium text-[var(--text-base)]" style={{ fontFamily: 'var(--font-heading)' }}>
+                          <Check size={18} />
+                          <span>Terminé</span>
                         </div>
                       )}
                     </>
