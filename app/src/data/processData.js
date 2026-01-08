@@ -89,6 +89,7 @@ export const FIELD_TO_CHECKLIST_MAP = {
   'brand_values': 'c3_1_2',
   'main_problem': 'c3_1_3',
   'tone_of_voice': 'c3_1_4',
+  'terms_to_use': 'c3_1_5',
   'qbst_terms': 'c3_2_1',
   'target_length': 'c3_3_1',
   // Phase 4
