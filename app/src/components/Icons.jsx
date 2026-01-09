@@ -53,6 +53,8 @@ import {
   CircleDot,
   PanelRight,
   ListChecks,
+  Keyboard,
+  HelpCircle,
 } from 'lucide-react';
 
 // Map des icônes par nom
@@ -110,6 +112,8 @@ const iconMap = {
   CircleDot,
   PanelRight,
   ListChecks,
+  Keyboard,
+  HelpCircle,
 };
 
 // Composant Icon générique
@@ -179,4 +183,6 @@ export {
   CircleDot,
   PanelRight,
   ListChecks,
+  Keyboard,
+  HelpCircle,
 };

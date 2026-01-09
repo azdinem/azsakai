@@ -39,10 +39,14 @@ import {
   Award,
   CheckCircle2,
   Menu,
+  Keyboard,
+  HelpCircle,
 } from '../components/Icons';
 import Confetti from '../components/Confetti';
 import Toast from '../components/Toast';
 import { SkeletonSidebar, SkeletonStepContent } from '../components/Skeleton';
+import KeyboardShortcuts from '../components/KeyboardShortcuts';
+import { HelpTooltip } from '../components/Tooltip';
 
 // Map des icônes pour les phases
 const phaseIcons = {
@@ -78,6 +82,7 @@ export default function ProjectPage() {
   const [lastCompletedPhase, setLastCompletedPhase] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [toast, setToast] = useState(null);
+  const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState(false);
 
   // Charger le projet
   useEffect(() => {
@@ -125,6 +130,58 @@ export default function ProjectPage() {
   useEffect(() => {
     setSidebarOpen(false);
   }, [activeStep]);
+
+  // Navigation clavier
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Ignorer si on est dans un champ de saisie
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') {
+        return;
+      }
+
+      const allSteps = PHASES.flatMap(p => p.steps.map(s => ({ ...s, phaseId: p.id })));
+      const currentIndex = allSteps.findIndex(s => s.id === activeStep);
+
+      switch (e.key) {
+        case 'ArrowLeft':
+          if (currentIndex > 0) {
+            const prevStep = allSteps[currentIndex - 1];
+            setActivePhase(prevStep.phaseId);
+            setActiveStep(prevStep.id);
+            updateProject(id, { currentPhase: prevStep.phaseId, currentStep: prevStep.id });
+          }
+          break;
+        case 'ArrowRight':
+          if (currentIndex < allSteps.length - 1) {
+            const nextStep = allSteps[currentIndex + 1];
+            setActivePhase(nextStep.phaseId);
+            setActiveStep(nextStep.id);
+            updateProject(id, { currentPhase: nextStep.phaseId, currentStep: nextStep.id });
+          }
+          break;
+        case 'Escape':
+          setShowSummary(false);
+          setPhaseDropdownOpen(false);
+          setSidebarOpen(false);
+          setShowKeyboardShortcuts(false);
+          break;
+        case '?':
+          setShowKeyboardShortcuts(prev => !prev);
+          break;
+        case 'r':
+        case 'R':
+          if (!e.ctrlKey && !e.metaKey) {
+            setShowSummary(prev => !prev);
+          }
+          break;
+        default:
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [activeStep, id, updateProject]);
 
   // Afficher le toast de sauvegarde
   const showSaveToast = useCallback(() => {
@@ -605,6 +662,15 @@ export default function ProjectPage() {
           <Download size={18} />
           <span>Exporter</span>
         </button>
+        <button
+          onClick={() => setShowKeyboardShortcuts(true)}
+          className="w-full flex items-center justify-center gap-2 p-3 bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] rounded-xl font-medium hover:bg-[var(--color-bg-tertiary)] transition-all"
+          style={{ fontFamily: 'var(--font-heading)' }}
+        >
+          <Keyboard size={18} />
+          <span>Raccourcis</span>
+          <kbd className="ml-auto px-1.5 py-0.5 bg-[var(--color-bg)] border border-[var(--color-border)] rounded text-[var(--text-xs)] font-mono">?</kbd>
+        </button>
       </div>
     </>
   );
@@ -765,14 +831,12 @@ export default function ProjectPage() {
                       className="bg-[var(--color-bg)] rounded-xl p-4 md:p-5 border border-[var(--color-border)] shadow-sm hover:shadow-md transition-shadow"
                     >
                       <label
-                        className="block text-[var(--text-sm)] font-semibold text-[var(--color-text)] mb-3"
+                        className="flex items-center gap-2 text-[var(--text-sm)] font-semibold text-[var(--color-text)] mb-3"
                         style={{ fontFamily: 'var(--font-heading)' }}
                       >
                         {field.label}
                         {FIELD_TO_CHECKLIST_MAP[field.id] && (
-                          <span className="ml-2 text-[var(--text-xs)] font-normal text-[var(--color-text-tertiary)]">
-                            (auto-validation)
-                          </span>
+                          <HelpTooltip content="Ce champ coche automatiquement l'élément correspondant dans la checklist une fois rempli." />
                         )}
                       </label>
                       {renderField(field)}
@@ -926,6 +990,12 @@ export default function ProjectPage() {
           </div>
         )}
       </main>
+
+      {/* Keyboard Shortcuts Modal */}
+      <KeyboardShortcuts
+        isOpen={showKeyboardShortcuts}
+        onClose={() => setShowKeyboardShortcuts(false)}
+      />
 
       {/* Summary Panel */}
       {showSummary && (

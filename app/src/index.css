@@ -416,3 +416,27 @@ textarea::placeholder {
     display: none !important;
   }
 }
+
+/* Tooltip fade animation */
+.animate-fadeIn {
+  animation: fadeIn 0.15s ease-out;
+}
+
+/* Pulse animation for recommended step */
+.pulse-ring {
+  animation: pulseRing 2s ease-in-out infinite;
+}
+
+@keyframes pulseRing {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(59, 130, 246, 0);
+  }
+}
+
+/* Keyboard shortcut badge */
+kbd {
+  font-family: ui-monospace, SFMono-Regular, 'SF Mono', Consolas, monospace;
+}
