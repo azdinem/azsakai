@@ -29,20 +29,24 @@ import {
   ChevronLeft,
   ChevronRight,
   ChevronDown,
-  ChevronUp,
   Check,
   Package,
   Download,
   Home,
   X,
-  PanelRight,
   ListChecks,
   Sparkles,
   Award,
-  Circle,
   CheckCircle2,
+  Menu,
+  Keyboard,
+  HelpCircle,
 } from '../components/Icons';
 import Confetti from '../components/Confetti';
+import Toast from '../components/Toast';
+import { SkeletonSidebar, SkeletonStepContent } from '../components/Skeleton';
+import KeyboardShortcuts from '../components/KeyboardShortcuts';
+import { HelpTooltip } from '../components/Tooltip';
 
 // Map des icônes pour les phases
 const phaseIcons = {
@@ -69,26 +73,41 @@ export default function ProjectPage() {
   const { getProject, updateProject, updateProjectField, toggleChecklistItem, exportProjectMarkdown } = useData();
 
   const [project, setProject] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [activePhase, setActivePhase] = useState('phase0');
   const [activeStep, setActiveStep] = useState('step0_1');
   const [phaseDropdownOpen, setPhaseDropdownOpen] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [lastCompletedPhase, setLastCompletedPhase] = useState(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [toast, setToast] = useState(null);
+  const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState(false);
 
+  // Charger le projet
   useEffect(() => {
-    const p = getProject(id);
-    if (p) {
-      setProject(p);
-      setActivePhase(p.currentPhase || 'phase0');
-      setActiveStep(p.currentStep || 'step0_1');
-    }
+    setIsLoading(true);
+    // Simuler un petit délai pour montrer le skeleton (optionnel en prod)
+    const timer = setTimeout(() => {
+      const p = getProject(id);
+      if (p) {
+        setProject(p);
+        setActivePhase(p.currentPhase || 'phase0');
+        setActiveStep(p.currentStep || 'step0_1');
+      }
+      setIsLoading(false);
+    }, 300);
+
+    return () => clearTimeout(timer);
   }, [id, getProject]);
 
+  // Mettre à jour le projet quand il change
   useEffect(() => {
-    const p = getProject(id);
-    if (p) {
-      setProject(p);
+    if (!isLoading) {
+      const p = getProject(id);
+      if (p) {
+        setProject(p);
+      }
     }
   });
 
@@ -98,23 +117,106 @@ export default function ProjectPage() {
       PHASES.forEach(phase => {
         const progress = calculatePhaseProgress(project, phase);
         if (progress === 100 && lastCompletedPhase !== phase.id) {
-          const prevProgress = lastCompletedPhase ? calculatePhaseProgress(project, PHASES.find(p => p.id === lastCompletedPhase)) : 0;
-          if (prevProgress !== 100 || lastCompletedPhase !== phase.id) {
-            // Vérifier si c'est la phase active qui vient d'être complétée
-            if (phase.id === activePhase) {
-              setShowConfetti(true);
-              setLastCompletedPhase(phase.id);
-            }
+          if (phase.id === activePhase) {
+            setShowConfetti(true);
+            setLastCompletedPhase(phase.id);
           }
         }
       });
     }
   }, [project, activePhase, lastCompletedPhase]);
 
+  // Fermer la sidebar sur changement de step (mobile)
+  useEffect(() => {
+    setSidebarOpen(false);
+  }, [activeStep]);
+
+  // Navigation clavier
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Ignorer si on est dans un champ de saisie
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') {
+        return;
+      }
+
+      const allSteps = PHASES.flatMap(p => p.steps.map(s => ({ ...s, phaseId: p.id })));
+      const currentIndex = allSteps.findIndex(s => s.id === activeStep);
+
+      switch (e.key) {
+        case 'ArrowLeft':
+          if (currentIndex > 0) {
+            const prevStep = allSteps[currentIndex - 1];
+            setActivePhase(prevStep.phaseId);
+            setActiveStep(prevStep.id);
+            updateProject(id, { currentPhase: prevStep.phaseId, currentStep: prevStep.id });
+          }
+          break;
+        case 'ArrowRight':
+          if (currentIndex < allSteps.length - 1) {
+            const nextStep = allSteps[currentIndex + 1];
+            setActivePhase(nextStep.phaseId);
+            setActiveStep(nextStep.id);
+            updateProject(id, { currentPhase: nextStep.phaseId, currentStep: nextStep.id });
+          }
+          break;
+        case 'Escape':
+          setShowSummary(false);
+          setPhaseDropdownOpen(false);
+          setSidebarOpen(false);
+          setShowKeyboardShortcuts(false);
+          break;
+        case '?':
+          setShowKeyboardShortcuts(prev => !prev);
+          break;
+        case 'r':
+        case 'R':
+          if (!e.ctrlKey && !e.metaKey) {
+            setShowSummary(prev => !prev);
+          }
+          break;
+        default:
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [activeStep, id, updateProject]);
+
+  // Afficher le toast de sauvegarde
+  const showSaveToast = useCallback(() => {
+    setToast({ message: 'Sauvegardé', type: 'success' });
+  }, []);
+
+  // État de chargement
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-[var(--color-bg-secondary)] flex">
+        <div className="hide-mobile">
+          <SkeletonSidebar />
+        </div>
+        <main className="flex-1 overflow-y-auto">
+          <SkeletonStepContent />
+        </main>
+      </div>
+    );
+  }
+
+  // Projet non trouvé
   if (!project) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[var(--color-bg)]">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[var(--color-bg)] gap-4">
+        <div className="w-16 h-16 bg-[var(--color-error-light)] rounded-2xl flex items-center justify-center">
+          <X size={32} className="text-[var(--color-error)]" />
+        </div>
         <p className="text-[var(--color-text-secondary)] text-[var(--text-lg)]">Projet non trouvé</p>
+        <button
+          onClick={() => navigate('/')}
+          className="flex items-center gap-2 px-4 py-2 bg-[var(--color-accent)] text-white rounded-lg font-medium hover:opacity-90 transition-opacity"
+        >
+          <Home size={18} />
+          <span>Retour au Dashboard</span>
+        </button>
       </div>
     );
   }
@@ -141,11 +243,11 @@ export default function ProjectPage() {
 
   const handleFieldChange = (fieldId, value) => {
     updateProjectField(id, fieldId, value);
+    showSaveToast();
 
     // Auto-complétion de la checklist
     const checklistId = FIELD_TO_CHECKLIST_MAP[fieldId];
     if (checklistId && value && value.length > 0) {
-      // Cocher automatiquement l'item de checklist correspondant
       if (!project.checklist?.[checklistId]) {
         toggleChecklistItem(id, checklistId);
       }
@@ -154,10 +256,12 @@ export default function ProjectPage() {
 
   const handleCheckToggle = (checkId) => {
     toggleChecklistItem(id, checkId);
+    showSaveToast();
   };
 
   const handleTitleChange = (newTitle) => {
     updateProject(id, { title: newTitle });
+    showSaveToast();
   };
 
   const getFieldOptions = (optionsRef) => {
@@ -315,269 +419,346 @@ export default function ProjectPage() {
 
   const TypeIcon = typeIcons[project.type] || FileText;
   const stepProgress = currentStep ? calculateStepProgress(project, currentStep) : 0;
-  const phaseProgress = currentPhase ? calculatePhaseProgress(project, currentPhase) : 0;
+
+  // Contenu de la sidebar (réutilisé pour mobile et desktop)
+  const SidebarContent = () => (
+    <>
+      {/* Header Sidebar */}
+      <div className="p-5 border-b border-[var(--color-border)]">
+        <div className="flex items-center justify-between mb-4">
+          <button
+            onClick={() => navigate('/')}
+            className="flex items-center gap-2 text-[var(--color-text-secondary)] hover:text-[var(--color-text)] transition-colors"
+          >
+            <Home size={18} />
+            <span className="text-[var(--text-sm)]">Retour</span>
+          </button>
+          {/* Bouton fermer (mobile uniquement) */}
+          <button
+            onClick={() => setSidebarOpen(false)}
+            className="hide-desktop p-2 hover:bg-[var(--color-bg-secondary)] rounded-lg transition-colors"
+          >
+            <X size={20} className="text-[var(--color-text-secondary)]" />
+          </button>
+        </div>
+
+        <div className="flex items-center gap-3 mb-3">
+          <div
+            className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+            style={{ backgroundColor: phaseColor?.light, color: phaseColor?.main }}
+          >
+            <TypeIcon size={20} />
+          </div>
+          <input
+            type="text"
+            value={project.title}
+            onChange={(e) => handleTitleChange(e.target.value)}
+            className="text-[var(--text-lg)] font-semibold text-[var(--color-text)] bg-transparent border-none focus:outline-none focus:ring-0 flex-1 min-w-0 p-0"
+            style={{ fontFamily: 'var(--font-heading)' }}
+          />
+        </div>
+
+        {/* Progression globale */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-[var(--text-sm)] text-[var(--color-text-secondary)]">Progression</span>
+            <span className="text-[var(--text-sm)] font-semibold" style={{ color: phaseColor?.main }}>
+              {overallProgress}%
+            </span>
+          </div>
+          <div className="h-2.5 bg-[var(--color-bg-tertiary)] rounded-full overflow-hidden">
+            <div
+              className="h-full rounded-full progress-bar"
+              style={{
+                width: `${overallProgress}%`,
+                background: `linear-gradient(90deg, ${phaseColor?.main} 0%, ${phaseColor?.dark} 100%)`
+              }}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Phase Dropdown */}
+      <div className="p-4 border-b border-[var(--color-border)]">
+        <div className="relative">
+          <button
+            onClick={() => setPhaseDropdownOpen(!phaseDropdownOpen)}
+            className="w-full flex items-center justify-between p-3 rounded-xl transition-all"
+            style={{
+              backgroundColor: phaseColor?.light,
+              border: `2px solid ${phaseColor?.main}20`
+            }}
+          >
+            <div className="flex items-center gap-3">
+              <div
+                className="w-8 h-8 rounded-lg flex items-center justify-center"
+                style={{ backgroundColor: phaseColor?.main, color: 'white' }}
+              >
+                {getPhaseIcon(currentPhase?.icon, 16)}
+              </div>
+              <div className="text-left">
+                <div className="text-[var(--text-xs)] font-medium" style={{ color: phaseColor?.main }}>
+                  Phase {currentPhase?.number}
+                </div>
+                <div className="text-[var(--text-sm)] font-semibold text-[var(--color-text)]" style={{ fontFamily: 'var(--font-heading)' }}>
+                  {currentPhase?.title}
+                </div>
+              </div>
+            </div>
+            <ChevronDown
+              size={18}
+              className={`transition-transform ${phaseDropdownOpen ? 'rotate-180' : ''}`}
+              style={{ color: phaseColor?.main }}
+            />
+          </button>
+
+          {/* Dropdown Menu */}
+          {phaseDropdownOpen && (
+            <div className="absolute top-full left-0 right-0 mt-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl shadow-lg z-50 overflow-hidden max-h-80 overflow-y-auto">
+              {PHASES.map(phase => {
+                const pColor = PHASE_COLORS[phase.id];
+                const pProgress = calculatePhaseProgress(project, phase);
+                const isActive = phase.id === activePhase;
+
+                return (
+                  <button
+                    key={phase.id}
+                    onClick={() => handlePhaseChange(phase.id)}
+                    className={`w-full flex items-center gap-3 p-3 hover:bg-[var(--color-bg-secondary)] transition-colors ${
+                      isActive ? 'bg-[var(--color-bg-secondary)]' : ''
+                    }`}
+                  >
+                    <div
+                      className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                      style={{
+                        backgroundColor: pProgress === 100 ? pColor.main : pColor.light,
+                        color: pProgress === 100 ? 'white' : pColor.main
+                      }}
+                    >
+                      {pProgress === 100 ? <Check size={16} /> : <span className="text-[var(--text-sm)] font-bold">{phase.number}</span>}
+                    </div>
+                    <div className="flex-1 text-left">
+                      <div className="text-[var(--text-sm)] font-medium text-[var(--color-text)]">
+                        {phase.title}
+                      </div>
+                      <div className="text-[var(--text-xs)] text-[var(--color-text-secondary)]">
+                        {pProgress}% complété
+                      </div>
+                    </div>
+                    {pProgress === 100 && (
+                      <Award size={16} style={{ color: pColor.main }} />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Steps List */}
+      <div className="flex-1 overflow-y-auto p-4">
+        <div className="space-y-1">
+          {currentPhase?.steps.map((step, index) => {
+            const sProgress = calculateStepProgress(project, step);
+            const isStepActive = activeStep === step.id;
+            const isCompleted = sProgress === 100;
+
+            return (
+              <button
+                key={step.id}
+                onClick={() => handleStepChange(step.id)}
+                className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all text-left ${
+                  isStepActive
+                    ? 'shadow-md'
+                    : 'hover:bg-[var(--color-bg-secondary)]'
+                }`}
+                style={isStepActive ? {
+                  backgroundColor: phaseColor?.light,
+                  border: `2px solid ${phaseColor?.main}40`
+                } : {}}
+              >
+                <div
+                  className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 transition-all ${
+                    isCompleted ? 'scale-110' : ''
+                  }`}
+                  style={{
+                    backgroundColor: isCompleted ? phaseColor?.main : isStepActive ? phaseColor?.light : 'var(--color-bg-tertiary)',
+                    color: isCompleted ? 'white' : isStepActive ? phaseColor?.main : 'var(--color-text-secondary)',
+                    border: isStepActive && !isCompleted ? `2px solid ${phaseColor?.main}` : 'none'
+                  }}
+                >
+                  {isCompleted ? <Check size={14} /> : <span className="text-[var(--text-xs)] font-bold">{index + 1}</span>}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className={`text-[var(--text-sm)] font-medium truncate ${
+                    isStepActive ? 'text-[var(--color-text)]' : 'text-[var(--color-text-secondary)]'
+                  }`} style={{ fontFamily: 'var(--font-heading)' }}>
+                    {step.title}
+                  </div>
+                  {!isCompleted && sProgress > 0 && (
+                    <div className="mt-1 h-1 bg-[var(--color-bg-tertiary)] rounded-full overflow-hidden">
+                      <div
+                        className="h-full rounded-full progress-bar"
+                        style={{ width: `${sProgress}%`, backgroundColor: phaseColor?.main }}
+                      />
+                    </div>
+                  )}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Mini Progress Map */}
+      <div className="p-4 border-t border-[var(--color-border)]">
+        <div className="flex items-center justify-between mb-3">
+          <span className="text-[var(--text-xs)] font-medium text-[var(--color-text-secondary)] uppercase tracking-wide">
+            Phases
+          </span>
+        </div>
+        <div className="flex gap-1">
+          {PHASES.map(phase => {
+            const pColor = PHASE_COLORS[phase.id];
+            const pProgress = calculatePhaseProgress(project, phase);
+            const isActive = phase.id === activePhase;
+
+            return (
+              <button
+                key={phase.id}
+                onClick={() => handlePhaseChange(phase.id)}
+                className={`flex-1 h-2 rounded-full transition-all ${isActive ? 'ring-2 ring-offset-1' : ''}`}
+                style={{
+                  backgroundColor: pProgress === 100 ? pColor.main : pProgress > 0 ? pColor.light : 'var(--color-bg-tertiary)',
+                  ringColor: pColor.main
+                }}
+                title={`${phase.title} - ${pProgress}%`}
+              />
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Actions */}
+      <div className="p-4 border-t border-[var(--color-border)] space-y-2">
+        <button
+          onClick={() => setShowSummary(true)}
+          className="w-full flex items-center justify-center gap-2 p-3 rounded-xl font-medium transition-all"
+          style={{
+            backgroundColor: phaseColor?.light,
+            color: phaseColor?.main,
+            fontFamily: 'var(--font-heading)'
+          }}
+        >
+          <ListChecks size={18} />
+          <span>Récapitulatif</span>
+        </button>
+        <button
+          onClick={() => exportProjectMarkdown(id)}
+          className="w-full flex items-center justify-center gap-2 p-3 bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] rounded-xl font-medium hover:bg-[var(--color-bg-tertiary)] transition-all"
+          style={{ fontFamily: 'var(--font-heading)' }}
+        >
+          <Download size={18} />
+          <span>Exporter</span>
+        </button>
+        <button
+          onClick={() => setShowKeyboardShortcuts(true)}
+          className="w-full flex items-center justify-center gap-2 p-3 bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] rounded-xl font-medium hover:bg-[var(--color-bg-tertiary)] transition-all"
+          style={{ fontFamily: 'var(--font-heading)' }}
+        >
+          <Keyboard size={18} />
+          <span>Raccourcis</span>
+          <kbd className="ml-auto px-1.5 py-0.5 bg-[var(--color-bg)] border border-[var(--color-border)] rounded text-[var(--text-xs)] font-mono">?</kbd>
+        </button>
+      </div>
+    </>
+  );
 
   return (
     <div className="min-h-screen bg-[var(--color-bg-secondary)] flex">
       {/* Confetti */}
       <Confetti active={showConfetti} onComplete={() => setShowConfetti(false)} />
 
-      {/* Sidebar */}
-      <aside className="w-72 bg-[var(--color-bg)] border-r border-[var(--color-border)] flex flex-col h-screen sticky top-0">
-        {/* Header Sidebar */}
-        <div className="p-5 border-b border-[var(--color-border)]">
+      {/* Toast de sauvegarde */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
+
+      {/* Mobile Header */}
+      <div className="hide-desktop fixed top-0 left-0 right-0 z-40 bg-[var(--color-bg)] border-b border-[var(--color-border)] px-4 py-3">
+        <div className="flex items-center justify-between">
           <button
-            onClick={() => navigate('/')}
-            className="flex items-center gap-2 text-[var(--color-text-secondary)] hover:text-[var(--color-text)] transition-colors mb-4"
+            onClick={() => setSidebarOpen(true)}
+            className="p-2 hover:bg-[var(--color-bg-secondary)] rounded-lg transition-colors"
           >
-            <Home size={18} />
-            <span className="text-[var(--text-sm)]">Retour</span>
+            <Menu size={24} className="text-[var(--color-text)]" />
           </button>
-
-          <div className="flex items-center gap-3 mb-3">
+          <div className="flex items-center gap-2">
             <div
-              className="w-10 h-10 rounded-xl flex items-center justify-center"
-              style={{ backgroundColor: phaseColor?.light, color: phaseColor?.main }}
+              className="w-8 h-8 rounded-lg flex items-center justify-center"
+              style={{ backgroundColor: phaseColor?.main, color: 'white' }}
             >
-              <TypeIcon size={20} />
+              {getPhaseIcon(currentPhase?.icon, 16)}
             </div>
-            <input
-              type="text"
-              value={project.title}
-              onChange={(e) => handleTitleChange(e.target.value)}
-              className="text-[var(--text-lg)] font-semibold text-[var(--color-text)] bg-transparent border-none focus:outline-none focus:ring-0 flex-1 min-w-0 p-0"
-              style={{ fontFamily: 'var(--font-heading)' }}
-            />
-          </div>
-
-          {/* Progression globale */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-[var(--text-sm)] text-[var(--color-text-secondary)]">Progression</span>
-              <span className="text-[var(--text-sm)] font-semibold" style={{ color: phaseColor?.main }}>
-                {overallProgress}%
-              </span>
-            </div>
-            <div className="h-2.5 bg-[var(--color-bg-tertiary)] rounded-full overflow-hidden">
-              <div
-                className="h-full rounded-full progress-bar"
-                style={{
-                  width: `${overallProgress}%`,
-                  background: `linear-gradient(90deg, ${phaseColor?.main} 0%, ${phaseColor?.dark} 100%)`
-                }}
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Phase Dropdown */}
-        <div className="p-4 border-b border-[var(--color-border)]">
-          <div className="relative">
-            <button
-              onClick={() => setPhaseDropdownOpen(!phaseDropdownOpen)}
-              className="w-full flex items-center justify-between p-3 rounded-xl transition-all"
-              style={{
-                backgroundColor: phaseColor?.light,
-                border: `2px solid ${phaseColor?.main}20`
-              }}
-            >
-              <div className="flex items-center gap-3">
-                <div
-                  className="w-8 h-8 rounded-lg flex items-center justify-center"
-                  style={{ backgroundColor: phaseColor?.main, color: 'white' }}
-                >
-                  {getPhaseIcon(currentPhase?.icon, 16)}
-                </div>
-                <div className="text-left">
-                  <div className="text-[var(--text-xs)] font-medium" style={{ color: phaseColor?.main }}>
-                    Phase {currentPhase?.number}
-                  </div>
-                  <div className="text-[var(--text-sm)] font-semibold text-[var(--color-text)]" style={{ fontFamily: 'var(--font-heading)' }}>
-                    {currentPhase?.title}
-                  </div>
-                </div>
-              </div>
-              <ChevronDown
-                size={18}
-                className={`transition-transform ${phaseDropdownOpen ? 'rotate-180' : ''}`}
-                style={{ color: phaseColor?.main }}
-              />
-            </button>
-
-            {/* Dropdown Menu */}
-            {phaseDropdownOpen && (
-              <div className="absolute top-full left-0 right-0 mt-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl shadow-lg z-50 overflow-hidden">
-                {PHASES.map(phase => {
-                  const pColor = PHASE_COLORS[phase.id];
-                  const pProgress = calculatePhaseProgress(project, phase);
-                  const isActive = phase.id === activePhase;
-
-                  return (
-                    <button
-                      key={phase.id}
-                      onClick={() => handlePhaseChange(phase.id)}
-                      className={`w-full flex items-center gap-3 p-3 hover:bg-[var(--color-bg-secondary)] transition-colors ${
-                        isActive ? 'bg-[var(--color-bg-secondary)]' : ''
-                      }`}
-                    >
-                      <div
-                        className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-                        style={{
-                          backgroundColor: pProgress === 100 ? pColor.main : pColor.light,
-                          color: pProgress === 100 ? 'white' : pColor.main
-                        }}
-                      >
-                        {pProgress === 100 ? <Check size={16} /> : <span className="text-[var(--text-sm)] font-bold">{phase.number}</span>}
-                      </div>
-                      <div className="flex-1 text-left">
-                        <div className="text-[var(--text-sm)] font-medium text-[var(--color-text)]">
-                          {phase.title}
-                        </div>
-                        <div className="text-[var(--text-xs)] text-[var(--color-text-secondary)]">
-                          {pProgress}% complété
-                        </div>
-                      </div>
-                      {pProgress === 100 && (
-                        <Award size={16} style={{ color: pColor.main }} />
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Steps List */}
-        <div className="flex-1 overflow-y-auto p-4">
-          <div className="space-y-1">
-            {currentPhase?.steps.map((step, index) => {
-              const sProgress = calculateStepProgress(project, step);
-              const isStepActive = activeStep === step.id;
-              const isCompleted = sProgress === 100;
-
-              return (
-                <button
-                  key={step.id}
-                  onClick={() => handleStepChange(step.id)}
-                  className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all text-left ${
-                    isStepActive
-                      ? 'shadow-md'
-                      : 'hover:bg-[var(--color-bg-secondary)]'
-                  }`}
-                  style={isStepActive ? {
-                    backgroundColor: phaseColor?.light,
-                    border: `2px solid ${phaseColor?.main}40`
-                  } : {}}
-                >
-                  <div
-                    className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 transition-all ${
-                      isCompleted ? 'scale-110' : ''
-                    }`}
-                    style={{
-                      backgroundColor: isCompleted ? phaseColor?.main : isStepActive ? phaseColor?.light : 'var(--color-bg-tertiary)',
-                      color: isCompleted ? 'white' : isStepActive ? phaseColor?.main : 'var(--color-text-secondary)',
-                      border: isStepActive && !isCompleted ? `2px solid ${phaseColor?.main}` : 'none'
-                    }}
-                  >
-                    {isCompleted ? <Check size={14} /> : <span className="text-[var(--text-xs)] font-bold">{index + 1}</span>}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className={`text-[var(--text-sm)] font-medium truncate ${
-                      isStepActive ? 'text-[var(--color-text)]' : 'text-[var(--color-text-secondary)]'
-                    }`} style={{ fontFamily: 'var(--font-heading)' }}>
-                      {step.title}
-                    </div>
-                    {!isCompleted && sProgress > 0 && (
-                      <div className="mt-1 h-1 bg-[var(--color-bg-tertiary)] rounded-full overflow-hidden">
-                        <div
-                          className="h-full rounded-full progress-bar"
-                          style={{ width: `${sProgress}%`, backgroundColor: phaseColor?.main }}
-                        />
-                      </div>
-                    )}
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Mini Progress Map */}
-        <div className="p-4 border-t border-[var(--color-border)]">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-[var(--text-xs)] font-medium text-[var(--color-text-secondary)] uppercase tracking-wide">
-              Phases
+            <span className="text-[var(--text-sm)] font-semibold text-[var(--color-text)]" style={{ fontFamily: 'var(--font-heading)' }}>
+              {currentPhase?.title}
             </span>
           </div>
-          <div className="flex gap-1">
-            {PHASES.map(phase => {
-              const pColor = PHASE_COLORS[phase.id];
-              const pProgress = calculatePhaseProgress(project, phase);
-              const isActive = phase.id === activePhase;
-
-              return (
-                <button
-                  key={phase.id}
-                  onClick={() => handlePhaseChange(phase.id)}
-                  className={`flex-1 h-2 rounded-full transition-all ${isActive ? 'ring-2 ring-offset-1' : ''}`}
-                  style={{
-                    backgroundColor: pProgress === 100 ? pColor.main : pProgress > 0 ? pColor.light : 'var(--color-bg-tertiary)',
-                    ringColor: pColor.main
-                  }}
-                  title={`${phase.title} - ${pProgress}%`}
-                />
-              );
-            })}
+          <div
+            className="text-[var(--text-sm)] font-bold px-2 py-1 rounded-full"
+            style={{ backgroundColor: phaseColor?.light, color: phaseColor?.main }}
+          >
+            {overallProgress}%
           </div>
         </div>
+      </div>
 
-        {/* Actions */}
-        <div className="p-4 border-t border-[var(--color-border)] space-y-2">
-          <button
-            onClick={() => setShowSummary(true)}
-            className="w-full flex items-center justify-center gap-2 p-3 rounded-xl font-medium transition-all"
-            style={{
-              backgroundColor: phaseColor?.light,
-              color: phaseColor?.main,
-              fontFamily: 'var(--font-heading)'
-            }}
+      {/* Mobile Sidebar Overlay */}
+      {sidebarOpen && (
+        <div
+          className="hide-desktop fixed inset-0 z-50 bg-black/50 sidebar-overlay"
+          onClick={() => setSidebarOpen(false)}
+        >
+          <aside
+            className="w-72 bg-[var(--color-bg)] h-full flex flex-col sidebar-mobile"
+            onClick={(e) => e.stopPropagation()}
           >
-            <ListChecks size={18} />
-            <span>Récapitulatif</span>
-          </button>
-          <button
-            onClick={() => exportProjectMarkdown(id)}
-            className="w-full flex items-center justify-center gap-2 p-3 bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] rounded-xl font-medium hover:bg-[var(--color-bg-tertiary)] transition-all"
-            style={{ fontFamily: 'var(--font-heading)' }}
-          >
-            <Download size={18} />
-            <span>Exporter</span>
-          </button>
+            <SidebarContent />
+          </aside>
         </div>
+      )}
+
+      {/* Desktop Sidebar */}
+      <aside className="hide-mobile w-72 bg-[var(--color-bg)] border-r border-[var(--color-border)] flex flex-col h-screen sticky top-0">
+        <SidebarContent />
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto">
+      <main className="flex-1 overflow-y-auto pt-16 md:pt-0">
         {currentStep && (
-          <div className="max-w-4xl mx-auto p-8">
+          <div className="max-w-4xl mx-auto p-4 md:p-8">
             {/* Step Header */}
             <div
-              className="rounded-2xl p-6 mb-8 fade-in"
+              className="rounded-2xl p-4 md:p-6 mb-6 md:mb-8 fade-in"
               style={{
                 background: `linear-gradient(135deg, ${phaseColor?.light} 0%, ${phaseColor?.main}10 100%)`,
                 border: `2px solid ${phaseColor?.main}20`
               }}
             >
-              <div className="flex items-start gap-4">
+              <div className="flex items-start gap-3 md:gap-4">
                 <div
-                  className="w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0"
+                  className="w-12 h-12 md:w-14 md:h-14 rounded-xl flex items-center justify-center flex-shrink-0"
                   style={{ backgroundColor: phaseColor?.main, color: 'white' }}
                 >
-                  {getPhaseIcon(currentPhase?.icon, 28)}
+                  {getPhaseIcon(currentPhase?.icon, 24)}
                 </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
+                <div className="flex-1 min-w-0">
+                  <div className="flex flex-wrap items-center gap-2 mb-1">
                     <span
                       className="text-[var(--text-xs)] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
                       style={{ backgroundColor: phaseColor?.main, color: 'white' }}
@@ -592,12 +773,12 @@ export default function ProjectPage() {
                     )}
                   </div>
                   <h1
-                    className="text-[var(--text-2xl)] font-bold text-[var(--color-text)] mb-2"
+                    className="text-[var(--text-xl)] md:text-[var(--text-2xl)] font-bold text-[var(--color-text)] mb-2"
                     style={{ fontFamily: 'var(--font-heading)' }}
                   >
                     {currentStep.title}
                   </h1>
-                  <p className="text-[var(--text-base)] text-[var(--color-text-secondary)]">
+                  <p className="text-[var(--text-sm)] md:text-[var(--text-base)] text-[var(--color-text-secondary)]">
                     {currentStep.objective}
                   </p>
                 </div>
@@ -625,9 +806,9 @@ export default function ProjectPage() {
               </div>
             </div>
 
-            {/* Documentation Section (Fields) - AVANT la checklist */}
+            {/* Documentation Section (Fields) */}
             {currentStep.fields && currentStep.fields.length > 0 && (
-              <div className="mb-8 fade-in">
+              <div className="mb-6 md:mb-8 fade-in">
                 <div className="flex items-center gap-2 mb-4">
                   <div
                     className="w-8 h-8 rounded-lg flex items-center justify-center"
@@ -643,21 +824,19 @@ export default function ProjectPage() {
                   </h2>
                 </div>
 
-                <div className="space-y-5">
+                <div className="space-y-4 md:space-y-5">
                   {currentStep.fields.map(field => (
                     <div
                       key={field.id}
-                      className="bg-[var(--color-bg)] rounded-xl p-5 border border-[var(--color-border)] shadow-sm hover:shadow-md transition-shadow"
+                      className="bg-[var(--color-bg)] rounded-xl p-4 md:p-5 border border-[var(--color-border)] shadow-sm hover:shadow-md transition-shadow"
                     >
                       <label
-                        className="block text-[var(--text-sm)] font-semibold text-[var(--color-text)] mb-3"
+                        className="flex items-center gap-2 text-[var(--text-sm)] font-semibold text-[var(--color-text)] mb-3"
                         style={{ fontFamily: 'var(--font-heading)' }}
                       >
                         {field.label}
                         {FIELD_TO_CHECKLIST_MAP[field.id] && (
-                          <span className="ml-2 text-[var(--text-xs)] font-normal text-[var(--color-text-tertiary)]">
-                            (auto-validation)
-                          </span>
+                          <HelpTooltip content="Ce champ coche automatiquement l'élément correspondant dans la checklist une fois rempli." />
                         )}
                       </label>
                       {renderField(field)}
@@ -667,8 +846,8 @@ export default function ProjectPage() {
               </div>
             )}
 
-            {/* Checklist Section - APRÈS les champs */}
-            <div className="mb-8 fade-in">
+            {/* Checklist Section */}
+            <div className="mb-6 md:mb-8 fade-in">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                   <div
@@ -702,7 +881,7 @@ export default function ProjectPage() {
                   return (
                     <label
                       key={check.id}
-                      className={`flex items-center gap-4 p-4 cursor-pointer transition-all hover:bg-[var(--color-bg-secondary)] ${
+                      className={`flex items-center gap-3 md:gap-4 p-3 md:p-4 cursor-pointer transition-all hover:bg-[var(--color-bg-secondary)] ${
                         index !== currentStep.checklist.length - 1 ? 'border-b border-[var(--color-border)]' : ''
                       } ${isChecked ? 'bg-[var(--color-success-light)]/30' : ''}`}
                     >
@@ -711,7 +890,7 @@ export default function ProjectPage() {
                         checked={isChecked}
                         onChange={() => handleCheckToggle(check.id)}
                       />
-                      <span className={`text-[var(--text-base)] flex-1 ${
+                      <span className={`text-[var(--text-sm)] md:text-[var(--text-base)] flex-1 ${
                         isChecked
                           ? 'text-[var(--color-text-secondary)] line-through'
                           : 'text-[var(--color-text)]'
@@ -719,7 +898,7 @@ export default function ProjectPage() {
                         {check.label}
                       </span>
                       {isChecked && (
-                        <Sparkles size={16} className="text-[var(--color-success)]" />
+                        <Sparkles size={16} className="text-[var(--color-success)] flex-shrink-0" />
                       )}
                     </label>
                   );
@@ -729,7 +908,7 @@ export default function ProjectPage() {
 
             {/* Deliverable */}
             <div
-              className="p-5 rounded-xl mb-8 fade-in"
+              className="p-4 md:p-5 rounded-xl mb-6 md:mb-8 fade-in"
               style={{
                 backgroundColor: phaseColor?.light,
                 border: `2px dashed ${phaseColor?.main}40`
@@ -744,7 +923,7 @@ export default function ProjectPage() {
                   >
                     Livrable attendu
                   </span>
-                  <p className="text-[var(--text-base)] text-[var(--color-text)] mt-1">
+                  <p className="text-[var(--text-sm)] md:text-[var(--text-base)] text-[var(--color-text)] mt-1">
                     {currentStep.deliverable}
                   </p>
                 </div>
@@ -752,7 +931,7 @@ export default function ProjectPage() {
             </div>
 
             {/* Navigation */}
-            <div className="flex justify-between pt-6 border-t border-[var(--color-border)]">
+            <div className="flex justify-between pt-4 md:pt-6 border-t border-[var(--color-border)]">
               {(() => {
                 const allSteps = PHASES.flatMap(p => p.steps.map(s => ({ ...s, phaseId: p.id })));
                 const currentIndex = allSteps.findIndex(s => s.id === activeStep);
@@ -768,10 +947,10 @@ export default function ProjectPage() {
                           setActiveStep(prevStep.id);
                           updateProject(id, { currentPhase: prevStep.phaseId, currentStep: prevStep.id });
                         }}
-                        className="flex items-center gap-2 px-5 py-3 text-[var(--color-text-secondary)] hover:bg-[var(--color-bg)] rounded-xl transition-all text-[var(--text-base)] font-medium"
+                        className="flex items-center gap-2 px-4 md:px-5 py-2.5 md:py-3 text-[var(--color-text-secondary)] hover:bg-[var(--color-bg)] rounded-xl transition-all text-[var(--text-sm)] md:text-[var(--text-base)] font-medium"
                       >
                         <ChevronLeft size={20} />
-                        <span>Précédent</span>
+                        <span className="hidden sm:inline">Précédent</span>
                       </button>
                     ) : <div />}
                     {nextStep ? (
@@ -781,7 +960,7 @@ export default function ProjectPage() {
                           setActiveStep(nextStep.id);
                           updateProject(id, { currentPhase: nextStep.phaseId, currentStep: nextStep.id });
                         }}
-                        className="flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all hover:shadow-lg"
+                        className="flex items-center gap-2 px-5 md:px-6 py-2.5 md:py-3 rounded-xl font-semibold transition-all hover:shadow-lg text-[var(--text-sm)] md:text-[var(--text-base)]"
                         style={{
                           background: `linear-gradient(135deg, ${phaseColor?.main} 0%, ${phaseColor?.dark} 100%)`,
                           color: 'white',
@@ -793,7 +972,7 @@ export default function ProjectPage() {
                       </button>
                     ) : (
                       <div
-                        className="flex items-center gap-2 px-6 py-3 rounded-xl font-semibold"
+                        className="flex items-center gap-2 px-5 md:px-6 py-2.5 md:py-3 rounded-xl font-semibold text-[var(--text-sm)] md:text-[var(--text-base)]"
                         style={{
                           backgroundColor: 'var(--color-success)',
                           color: 'white',
@@ -801,7 +980,7 @@ export default function ProjectPage() {
                         }}
                       >
                         <Check size={20} />
-                        <span>Processus terminé</span>
+                        <span>Terminé</span>
                       </div>
                     )}
                   </>
@@ -811,6 +990,12 @@ export default function ProjectPage() {
           </div>
         )}
       </main>
+
+      {/* Keyboard Shortcuts Modal */}
+      <KeyboardShortcuts
+        isOpen={showKeyboardShortcuts}
+        onClose={() => setShowKeyboardShortcuts(false)}
+      />
 
       {/* Summary Panel */}
       {showSummary && (
@@ -824,7 +1009,7 @@ export default function ProjectPage() {
           {/* Panel */}
           <div className="absolute right-0 top-0 bottom-0 w-full max-w-lg bg-[var(--color-bg)] shadow-2xl slide-panel overflow-hidden flex flex-col">
             {/* Header */}
-            <div className="p-6 border-b border-[var(--color-border)] flex items-center justify-between">
+            <div className="p-4 md:p-6 border-b border-[var(--color-border)] flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div
                   className="w-10 h-10 rounded-xl flex items-center justify-center"
@@ -834,7 +1019,7 @@ export default function ProjectPage() {
                 </div>
                 <div>
                   <h2
-                    className="text-[var(--text-xl)] font-bold text-[var(--color-text)]"
+                    className="text-[var(--text-lg)] md:text-[var(--text-xl)] font-bold text-[var(--color-text)]"
                     style={{ fontFamily: 'var(--font-heading)' }}
                   >
                     Récapitulatif
@@ -853,7 +1038,7 @@ export default function ProjectPage() {
             </div>
 
             {/* Content */}
-            <div className="flex-1 overflow-y-auto p-6">
+            <div className="flex-1 overflow-y-auto p-4 md:p-6">
               {getSummaryData().length === 0 ? (
                 <div className="text-center py-12">
                   <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[var(--color-bg-secondary)] flex items-center justify-center">
@@ -864,14 +1049,14 @@ export default function ProjectPage() {
                   </p>
                 </div>
               ) : (
-                <div className="space-y-6">
+                <div className="space-y-4 md:space-y-6">
                   {getSummaryData().map(phaseData => (
                     <div
                       key={phaseData.phase.id}
                       className="rounded-xl overflow-hidden border border-[var(--color-border)]"
                     >
                       <div
-                        className="p-4 flex items-center justify-between"
+                        className="p-3 md:p-4 flex items-center justify-between"
                         style={{ backgroundColor: phaseData.color.light }}
                       >
                         <div className="flex items-center gap-3">
@@ -882,14 +1067,14 @@ export default function ProjectPage() {
                             <span className="text-[var(--text-sm)] font-bold">{phaseData.phase.number}</span>
                           </div>
                           <span
-                            className="font-semibold text-[var(--color-text)]"
+                            className="font-semibold text-[var(--color-text)] text-[var(--text-sm)] md:text-[var(--text-base)]"
                             style={{ fontFamily: 'var(--font-heading)' }}
                           >
                             {phaseData.phase.title}
                           </span>
                         </div>
                         <span
-                          className="text-[var(--text-sm)] font-bold px-2 py-0.5 rounded-full"
+                          className="text-[var(--text-xs)] md:text-[var(--text-sm)] font-bold px-2 py-0.5 rounded-full"
                           style={{
                             backgroundColor: phaseData.progress === 100 ? 'var(--color-success)' : phaseData.color.main,
                             color: 'white'
@@ -900,7 +1085,7 @@ export default function ProjectPage() {
                       </div>
 
                       {phaseData.fields.length > 0 && (
-                        <div className="p-4 space-y-3 bg-[var(--color-bg)]">
+                        <div className="p-3 md:p-4 space-y-3 bg-[var(--color-bg)]">
                           {phaseData.fields.map((field, idx) => (
                             <div key={idx}>
                               <div className="text-[var(--text-xs)] font-medium text-[var(--color-text-secondary)] uppercase tracking-wide mb-1">
@@ -920,7 +1105,7 @@ export default function ProjectPage() {
             </div>
 
             {/* Footer */}
-            <div className="p-6 border-t border-[var(--color-border)]">
+            <div className="p-4 md:p-6 border-t border-[var(--color-border)]">
               <button
                 onClick={() => {
                   exportProjectMarkdown(id);
