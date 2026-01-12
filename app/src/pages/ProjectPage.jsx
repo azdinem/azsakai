@@ -41,6 +41,8 @@ import {
   Menu,
   Keyboard,
   HelpCircle,
+  Edit3,
+  Eye,
 } from '../components/Icons';
 import Confetti from '../components/Confetti';
 import Toast from '../components/Toast';
@@ -83,6 +85,7 @@ export default function ProjectPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [toast, setToast] = useState(null);
   const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState(false);
+  const [editingField, setEditingField] = useState(null);
 
   // Charger le projet
   useEffect(() => {
@@ -281,6 +284,41 @@ export default function ProjectPage() {
   const getPhaseIcon = (iconName, size = 20) => {
     const IconComponent = phaseIcons[iconName];
     return IconComponent ? <IconComponent size={size} /> : null;
+  };
+
+  // Vérifier si un champ est rempli
+  const isFieldFilled = (fieldId) => {
+    const value = project?.fields?.[fieldId];
+    if (!value) return false;
+    if (typeof value === 'string') return value.trim().length > 0;
+    if (Array.isArray(value)) return value.length > 0;
+    return Boolean(value);
+  };
+
+  // Obtenir la valeur affichable d'un champ
+  const getDisplayValue = (field) => {
+    const value = project?.fields?.[field.id];
+    if (!value) return null;
+
+    const options = getFieldOptions(field.options);
+
+    if (field.type === 'select' && options.length > 0) {
+      const selected = options.find(opt => opt.id === value);
+      return selected?.label || value;
+    }
+
+    if (field.type === 'multicheck' && Array.isArray(value)) {
+      return value.map(v => {
+        const opt = options.find(o => o.id === v);
+        return opt?.label || v;
+      }).join(', ');
+    }
+
+    if (typeof value === 'string' && value.length > 150) {
+      return value.substring(0, 150) + '...';
+    }
+
+    return typeof value === 'string' ? value : JSON.stringify(value);
   };
 
   const renderField = (field) => {
@@ -809,39 +847,109 @@ export default function ProjectPage() {
             {/* Documentation Section (Fields) */}
             {currentStep.fields && currentStep.fields.length > 0 && (
               <div className="mb-6 md:mb-8 fade-in">
-                <div className="flex items-center gap-2 mb-4">
-                  <div
-                    className="w-8 h-8 rounded-lg flex items-center justify-center"
-                    style={{ backgroundColor: phaseColor?.light, color: phaseColor?.main }}
-                  >
-                    <Package size={18} />
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <div
+                      className="w-8 h-8 rounded-lg flex items-center justify-center"
+                      style={{ backgroundColor: phaseColor?.light, color: phaseColor?.main }}
+                    >
+                      <Package size={18} />
+                    </div>
+                    <h2
+                      className="text-[var(--text-lg)] font-semibold text-[var(--color-text)]"
+                      style={{ fontFamily: 'var(--font-heading)' }}
+                    >
+                      Documentation
+                    </h2>
                   </div>
-                  <h2
-                    className="text-[var(--text-lg)] font-semibold text-[var(--color-text)]"
-                    style={{ fontFamily: 'var(--font-heading)' }}
-                  >
-                    Documentation
-                  </h2>
+                  {/* Compteur de champs remplis */}
+                  {(() => {
+                    const filledCount = currentStep.fields.filter(f => isFieldFilled(f.id)).length;
+                    const totalCount = currentStep.fields.length;
+                    const allFilled = filledCount === totalCount;
+                    return (
+                      <span
+                        className="text-[var(--text-sm)] font-semibold px-3 py-1 rounded-full transition-all"
+                        style={{
+                          backgroundColor: allFilled ? 'var(--color-success-light)' : phaseColor?.light,
+                          color: allFilled ? 'var(--color-success)' : phaseColor?.main
+                        }}
+                      >
+                        {filledCount}/{totalCount}
+                      </span>
+                    );
+                  })()}
                 </div>
 
                 <div className="space-y-4 md:space-y-5">
-                  {currentStep.fields.map(field => (
-                    <div
-                      key={field.id}
-                      className="bg-[var(--color-bg)] rounded-xl p-4 md:p-5 border border-[var(--color-border)] shadow-sm hover:shadow-md transition-shadow"
-                    >
-                      <label
-                        className="flex items-center gap-2 text-[var(--text-sm)] font-semibold text-[var(--color-text)] mb-3"
-                        style={{ fontFamily: 'var(--font-heading)' }}
+                  {currentStep.fields.map(field => {
+                    const isFilled = isFieldFilled(field.id);
+                    const isEditing = editingField === field.id;
+                    const displayValue = getDisplayValue(field);
+
+                    return (
+                      <div
+                        key={field.id}
+                        className={`bg-[var(--color-bg)] rounded-xl p-4 md:p-5 border-2 shadow-sm transition-all ${
+                          isFilled && !isEditing
+                            ? 'border-[var(--color-success)]/30 bg-[var(--color-success-light)]/30'
+                            : 'border-[var(--color-border)] hover:shadow-md'
+                        }`}
                       >
-                        {field.label}
-                        {FIELD_TO_CHECKLIST_MAP[field.id] && (
-                          <HelpTooltip content="Ce champ coche automatiquement l'élément correspondant dans la checklist une fois rempli." />
+                        {/* Header du champ */}
+                        <div className="flex items-center justify-between mb-3">
+                          <label
+                            className="flex items-center gap-2 text-[var(--text-sm)] font-semibold text-[var(--color-text)]"
+                            style={{ fontFamily: 'var(--font-heading)' }}
+                          >
+                            {isFilled && !isEditing && (
+                              <span className="flex items-center justify-center w-5 h-5 bg-[var(--color-success)] rounded-full success-indicator">
+                                <Check size={12} className="text-white" />
+                              </span>
+                            )}
+                            {field.label}
+                            {FIELD_TO_CHECKLIST_MAP[field.id] && (
+                              <HelpTooltip content="Ce champ coche automatiquement l'élément correspondant dans la checklist une fois rempli." />
+                            )}
+                          </label>
+
+                          {/* Bouton éditer/voir */}
+                          {isFilled && !isEditing && (
+                            <button
+                              onClick={() => setEditingField(field.id)}
+                              className="flex items-center gap-1.5 px-3 py-1.5 text-[var(--text-xs)] font-medium text-[var(--color-accent)] bg-[var(--color-accent-light)] hover:bg-[var(--color-accent)] hover:text-white rounded-lg transition-all"
+                            >
+                              <Edit3 size={14} />
+                              <span>Modifier</span>
+                            </button>
+                          )}
+                          {isEditing && (
+                            <button
+                              onClick={() => setEditingField(null)}
+                              className="flex items-center gap-1.5 px-3 py-1.5 text-[var(--text-xs)] font-medium text-[var(--color-success)] bg-[var(--color-success-light)] hover:bg-[var(--color-success)] hover:text-white rounded-lg transition-all"
+                            >
+                              <Check size={14} />
+                              <span>Valider</span>
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Contenu : mode lecture ou édition */}
+                        {isFilled && !isEditing ? (
+                          <div
+                            className="p-3 bg-[var(--color-bg)] rounded-lg border border-[var(--color-border)] cursor-pointer hover:bg-[var(--color-bg-secondary)] transition-colors"
+                            onClick={() => setEditingField(field.id)}
+                          >
+                            <p className="text-[var(--text-sm)] text-[var(--color-text)] whitespace-pre-wrap">
+                              {displayValue}
+                            </p>
+                          </div>
+                        ) : (
+                          renderField(field)
                         )}
-                      </label>
-                      {renderField(field)}
-                    </div>
-                  ))}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}
