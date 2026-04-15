@@ -142,17 +142,14 @@ export default function ProjectPage() {
   if (!project) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-6" style={{ backgroundColor: 'var(--color-bg)' }}>
-        <p className="font-mono uppercase" style={{ fontSize: 'var(--text-xs)', letterSpacing: '0.1em', color: 'var(--color-error)' }}>
+        <p className="font-mono uppercase" style={{ fontSize: 'var(--text-xs)', letterSpacing: '0.1em', color: 'var(--color-accent)' }}>
           Erreur 404
         </p>
-        <p className="font-display italic" style={{ fontSize: 'var(--text-2xl)', color: 'var(--color-text-secondary)' }}>
-          Ce chapitre n'existe plus.
+        <p className="font-display" style={{ fontSize: 'var(--text-2xl)', color: 'var(--color-text)', textTransform: 'uppercase', lineHeight: 0.95 }}>
+          Ce chapitre n'existe<br />plus.
         </p>
-        <button
-          onClick={() => navigate('/')}
-          className="btn-primary"
-        >
-          Retour au sommaire
+        <button onClick={() => navigate('/')} className="btn-primary">
+          Retour au sommaire →
         </button>
       </div>
     );
@@ -279,20 +276,16 @@ export default function ProjectPage() {
       case 'multicheck': {
         const selectedValues = value ? (Array.isArray(value) ? value : [value]) : [];
         return (
-          <div
-            className="space-y-1 p-3"
-            style={{
-              backgroundColor: 'var(--color-bg-secondary)',
-              borderRadius: 'var(--radius-md)',
-              border: '1px solid var(--color-border)',
-            }}
-          >
-            {options.map(opt => (
+          <div style={{ border: '1px solid var(--color-text)' }}>
+            {options.map((opt, i) => (
               <label
                 key={opt.id}
-                className="flex items-start gap-3 cursor-pointer p-2 rounded transition-colors"
-                style={{ fontSize: 'var(--text-sm)' }}
-                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'var(--color-bg)')}
+                className="flex items-start gap-3 cursor-pointer p-3 transition-colors"
+                style={{
+                  fontSize: 'var(--text-sm)',
+                  borderTop: i > 0 ? '1px solid var(--color-text)' : 'none',
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'var(--color-bg-secondary)')}
                 onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
               >
                 <input
@@ -385,17 +378,17 @@ export default function ProjectPage() {
 
   const sidebarContent = (
     <>
-      <div className="px-5 py-6" style={{ borderBottom: '1px solid var(--color-border)' }}>
+      <div className="px-5 py-5" style={{ borderBottom: '1px solid var(--color-text)' }}>
         <button
           onClick={() => navigate('/')}
           className="font-mono uppercase flex items-center gap-2 mb-5 transition-colors"
           style={{
             fontSize: 'var(--text-xs)',
             letterSpacing: '0.08em',
-            color: 'var(--color-text-tertiary)',
+            color: 'var(--color-text)',
           }}
-          onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--color-text)')}
-          onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--color-text-tertiary)')}
+          onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--color-accent)')}
+          onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--color-text)')}
         >
           <span>←</span>
           <span>Sommaire</span>
@@ -405,104 +398,113 @@ export default function ProjectPage() {
         <button
           onClick={() => setSidebarOpen(false)}
           className="hide-desktop absolute top-5 right-4 p-2"
-          style={{ color: 'var(--color-text-secondary)' }}
+          style={{ color: 'var(--color-text)' }}
         >
-          <X size={18} />
+          <X size={16} />
         </button>
 
         <input
           type="text"
           value={project.title}
           onChange={(e) => handleTitleChange(e.target.value)}
-          className="font-display bg-transparent w-full p-0"
+          className="font-display w-full"
           style={{
-            fontSize: 'var(--text-2xl)',
-            lineHeight: 1.1,
+            fontSize: 'var(--text-xl)',
+            lineHeight: 0.95,
             border: 'none',
-            outline: 'none',
-            color: 'var(--color-text)',
+            borderBottom: '1px solid transparent',
+            padding: '0.25rem 0',
+            textTransform: 'uppercase',
+            fontWeight: 800,
+            letterSpacing: '-0.02em',
           }}
+          onFocus={(e) => (e.currentTarget.style.borderBottomColor = 'var(--color-accent)')}
+          onBlur={(e) => (e.currentTarget.style.borderBottomColor = 'transparent')}
         />
 
-        <div className="mt-6">
-          <div className="flex items-baseline justify-between mb-2">
-            <span
-              className="font-mono uppercase"
-              style={{
-                fontSize: 'var(--text-xs)',
-                letterSpacing: '0.08em',
-                color: 'var(--color-text-tertiary)',
-              }}
-            >
-              Progression
-            </span>
-            <span
-              className="num-display"
-              style={{ fontSize: 'var(--text-base)', color: 'var(--color-text)' }}
-            >
-              {overallProgress}%
-            </span>
-          </div>
-          <div style={{ height: '1px', width: '100%', backgroundColor: 'var(--color-border)', position: 'relative' }}>
-            <div
-              className="progress-bar"
-              style={{
-                width: `${overallProgress}%`,
-                height: '1px',
-                backgroundColor: 'var(--color-accent)',
-                position: 'absolute',
-                top: 0,
-                left: 0,
-              }}
-            />
-          </div>
+        <div className="mt-6 flex items-baseline justify-between mb-2">
+          <span
+            className="font-mono uppercase"
+            style={{
+              fontSize: 'var(--text-xs)',
+              letterSpacing: '0.08em',
+              color: 'var(--color-text-tertiary)',
+            }}
+          >
+            Progression
+          </span>
+          <span
+            className="num-display"
+            style={{ fontSize: 'var(--text-md)' }}
+          >
+            {overallProgress}%
+          </span>
+        </div>
+        <div style={{ height: '1px', width: '100%', backgroundColor: 'var(--color-text)', position: 'relative', opacity: 0.2 }}>
+          <div
+            className="progress-bar"
+            style={{
+              width: `${overallProgress}%`,
+              height: '2px',
+              backgroundColor: 'var(--color-accent)',
+              position: 'absolute',
+              top: '-1px',
+              left: 0,
+            }}
+          />
         </div>
       </div>
 
-      {/* Phases list — editorial chapters */}
-      <div className="flex-1 overflow-y-auto px-5 py-6">
-        <p
-          className="font-mono uppercase mb-4"
-          style={{
-            fontSize: 'var(--text-xs)',
-            letterSpacing: '0.1em',
-            color: 'var(--color-text-tertiary)',
-          }}
-        >
-          Sommaire
-        </p>
+      {/* Phases list */}
+      <div className="flex-1 overflow-y-auto px-5 py-5">
+        <div className="flex items-baseline justify-between mb-4">
+          <span
+            className="font-mono uppercase"
+            style={{
+              fontSize: 'var(--text-xs)',
+              letterSpacing: '0.1em',
+              color: 'var(--color-text-tertiary)',
+            }}
+          >
+            Sommaire
+          </span>
+          <span className="section-index">E.01</span>
+        </div>
 
-        <nav className="space-y-1">
+        <nav style={{ borderTop: '1px solid var(--color-text)' }}>
           {PHASES.map(phase => {
             const pProgress = calculatePhaseProgress(project, phase);
             const isActive = phase.id === activePhase;
             const isPhaseCompleted = pProgress === 100;
             return (
-              <div key={phase.id}>
+              <div key={phase.id} style={{ borderBottom: '1px solid var(--color-text)' }}>
                 <button
                   onClick={() => handlePhaseChange(phase.id)}
-                  className="w-full flex items-baseline gap-3 py-2 text-left transition-all group"
+                  className="w-full flex items-baseline gap-3 py-2.5 text-left transition-colors"
                   style={{
-                    paddingLeft: isActive ? '8px' : '0',
-                    borderLeft: isActive ? '2px solid var(--color-accent)' : '2px solid transparent',
+                    backgroundColor: isActive ? 'var(--color-bg-secondary)' : 'transparent',
+                    paddingLeft: isActive ? '0.5rem' : '0',
                   }}
                 >
                   <span
-                    className="font-mono flex-shrink-0"
+                    className="font-mono"
                     style={{
                       fontSize: 'var(--text-xs)',
-                      color: isPhaseCompleted ? 'var(--color-success)' : isActive ? 'var(--color-accent)' : 'var(--color-text-tertiary)',
+                      color: isPhaseCompleted ? 'var(--color-accent)' : isActive ? 'var(--color-accent)' : 'var(--color-text-tertiary)',
                       minWidth: '2ch',
                     }}
                   >
                     {isPhaseCompleted ? '✓' : String(phase.number).padStart(2, '0')}
                   </span>
                   <span
+                    className="font-display"
                     style={{
-                      fontSize: 'var(--text-sm)',
-                      color: isActive ? 'var(--color-text)' : 'var(--color-text-secondary)',
-                      fontWeight: isActive ? 500 : 400,
-                      lineHeight: 1.3,
+                      fontSize: 'var(--text-xs)',
+                      fontWeight: isActive ? 800 : 600,
+                      color: 'var(--color-text)',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0',
+                      lineHeight: 1.2,
                     }}
                   >
                     {phase.title}
@@ -511,7 +513,7 @@ export default function ProjectPage() {
 
                 {/* Steps under active phase */}
                 {isActive && currentPhase?.steps && (
-                  <div className="ml-7 mt-1 mb-3 space-y-1">
+                  <div className="pb-3 pl-7">
                     {currentPhase.steps.map((step, index) => {
                       const sProgress = calculateStepProgress(project, step);
                       const isStepActive = activeStep === step.id;
@@ -523,10 +525,10 @@ export default function ProjectPage() {
                           className="w-full flex items-baseline gap-2 py-1 text-left transition-colors"
                         >
                           <span
-                            className="font-mono flex-shrink-0"
+                            className="font-mono"
                             style={{
                               fontSize: 'var(--text-xs)',
-                              color: isStepCompleted ? 'var(--color-success)' : isStepActive ? 'var(--color-accent)' : 'var(--color-text-tertiary)',
+                              color: isStepCompleted ? 'var(--color-accent)' : isStepActive ? 'var(--color-accent)' : 'var(--color-text-tertiary)',
                               minWidth: '1.5ch',
                             }}
                           >
@@ -537,8 +539,9 @@ export default function ProjectPage() {
                               fontSize: 'var(--text-xs)',
                               color: isStepActive ? 'var(--color-text)' : 'var(--color-text-tertiary)',
                               lineHeight: 1.3,
+                              fontWeight: isStepActive ? 600 : 400,
                               textDecoration: isStepActive ? 'underline' : 'none',
-                              textUnderlineOffset: '3px',
+                              textUnderlineOffset: '2px',
                               textDecorationColor: 'var(--color-accent)',
                             }}
                           >
@@ -556,17 +559,17 @@ export default function ProjectPage() {
       </div>
 
       {/* Actions footer */}
-      <div className="px-5 py-5 space-y-2" style={{ borderTop: '1px solid var(--color-border)' }}>
+      <div className="px-5 py-4" style={{ borderTop: '1px solid var(--color-text)' }}>
         <button
           onClick={() => setShowSummary(true)}
           className="w-full flex items-center justify-between font-mono uppercase py-2 transition-colors"
           style={{
             fontSize: 'var(--text-xs)',
             letterSpacing: '0.08em',
-            color: 'var(--color-text-secondary)',
+            color: 'var(--color-text)',
           }}
-          onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--color-text)')}
-          onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--color-text-secondary)')}
+          onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--color-accent)')}
+          onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--color-text)')}
         >
           <span>Récapitulatif</span>
           <kbd>R</kbd>
@@ -577,10 +580,10 @@ export default function ProjectPage() {
           style={{
             fontSize: 'var(--text-xs)',
             letterSpacing: '0.08em',
-            color: 'var(--color-text-secondary)',
+            color: 'var(--color-text)',
           }}
-          onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--color-text)')}
-          onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--color-text-secondary)')}
+          onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--color-accent)')}
+          onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--color-text)')}
         >
           <span>Exporter</span>
           <Download size={12} />
@@ -591,18 +594,18 @@ export default function ProjectPage() {
           style={{
             fontSize: 'var(--text-xs)',
             letterSpacing: '0.08em',
-            color: 'var(--color-text-secondary)',
+            color: 'var(--color-text)',
           }}
-          onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--color-text)')}
-          onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--color-text-secondary)')}
+          onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--color-accent)')}
+          onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--color-text)')}
         >
           <span>Raccourcis</span>
           <kbd>?</kbd>
         </button>
 
         <div
-          className="pt-4 mt-2"
-          style={{ borderTop: '1px solid var(--color-border)' }}
+          className="pt-4 mt-3"
+          style={{ borderTop: '1px solid var(--color-text)' }}
         >
           <p
             className="font-mono"
@@ -649,15 +652,15 @@ export default function ProjectPage() {
       {/* Mobile header */}
       <div
         className="hide-desktop fixed top-0 left-0 right-0 z-40 px-4 py-3"
-        style={{ backgroundColor: 'var(--color-bg)', borderBottom: '1px solid var(--color-border)' }}
+        style={{ backgroundColor: 'var(--color-bg)', borderBottom: '1px solid var(--color-text)' }}
       >
         <div className="flex items-center justify-between">
           <button onClick={() => setSidebarOpen(true)} className="p-2">
-            <Menu size={20} style={{ color: 'var(--color-text)' }} />
+            <Menu size={18} style={{ color: 'var(--color-text)' }} />
           </button>
           <span
             className="font-mono uppercase"
-            style={{ fontSize: 'var(--text-xs)', letterSpacing: '0.08em', color: 'var(--color-text-secondary)' }}
+            style={{ fontSize: 'var(--text-xs)', letterSpacing: '0.08em' }}
           >
             Ch. {currentPhase?.number} · {overallProgress}%
           </span>
@@ -668,12 +671,12 @@ export default function ProjectPage() {
       {sidebarOpen && (
         <div
           className="hide-desktop fixed inset-0 z-50 sidebar-overlay"
-          style={{ backgroundColor: 'rgb(26 23 20 / 0.35)' }}
+          style={{ backgroundColor: 'rgb(0 0 0 / 0.35)' }}
           onClick={() => setSidebarOpen(false)}
         >
           <aside
             className="w-72 h-full flex flex-col sidebar-mobile relative"
-            style={{ backgroundColor: 'var(--color-bg)' }}
+            style={{ backgroundColor: 'var(--color-bg)', borderRight: '1px solid var(--color-text)' }}
             onClick={(e) => e.stopPropagation()}
           >
             {sidebarContent}
@@ -684,7 +687,7 @@ export default function ProjectPage() {
       {/* Desktop sidebar */}
       <aside
         className="hide-mobile w-64 flex flex-col h-screen sticky top-0"
-        style={{ backgroundColor: 'var(--color-bg)', borderRight: '1px solid var(--color-border)' }}
+        style={{ backgroundColor: 'var(--color-bg)', borderRight: '1px solid var(--color-text)' }}
       >
         {sidebarContent}
       </aside>
@@ -694,24 +697,24 @@ export default function ProjectPage() {
         {currentStep && (
           <div className="max-w-2xl mx-auto px-6 md:px-10 py-12 md:py-20">
             {/* Top progress rule + chapter marker */}
-            <div className="mb-12">
+            <div className="mb-16">
               <div
                 style={{
                   height: '1px',
                   width: '100%',
-                  backgroundColor: 'var(--color-border)',
+                  backgroundColor: 'var(--color-text)',
                   position: 'relative',
-                  marginBottom: '1.5rem',
+                  marginBottom: '1rem',
                 }}
               >
                 <div
                   className="progress-bar"
                   style={{
                     width: `${overallProgress}%`,
-                    height: '1px',
+                    height: '2px',
                     backgroundColor: 'var(--color-accent)',
                     position: 'absolute',
-                    top: 0,
+                    top: '-1px',
                     left: 0,
                   }}
                 />
@@ -722,41 +725,46 @@ export default function ProjectPage() {
                   style={{
                     fontSize: 'var(--text-xs)',
                     letterSpacing: '0.1em',
-                    color: 'var(--color-text-tertiary)',
+                    color: 'var(--color-text)',
                   }}
                 >
-                  Chapitre {currentPhase?.number} · {String(PHASES.length).padStart(2, '0')}
+                  Chapitre {currentPhase?.number} — 09
                 </span>
-                <span
-                  className="font-mono"
-                  style={{
-                    fontSize: 'var(--text-xs)',
-                    letterSpacing: '0.04em',
-                    color: 'var(--color-text-tertiary)',
-                  }}
-                >
-                  {String(currentStep.number).padStart(2, '0')}
+                <span className="section-index">
+                  Étape {String(currentStep.number).padStart(2, '0')}
                 </span>
               </div>
             </div>
 
-            {/* Step title block */}
+            {/* Chapter title block — Swiss hero */}
             <section className="editorial-reveal mb-16">
-              <p
-                className="font-mono uppercase mb-4"
-                style={{
-                  fontSize: 'var(--text-xs)',
-                  letterSpacing: '0.08em',
-                  color: 'var(--color-accent)',
-                }}
-              >
-                {currentPhase?.title}
-              </p>
+              <div className="grid grid-cols-[auto_1fr] gap-6 items-end mb-6">
+                <div
+                  className="num-display"
+                  style={{
+                    fontSize: 'clamp(3rem, 7vw, 6rem)',
+                    color: 'var(--color-text)',
+                  }}
+                >
+                  {String(currentPhase.number).padStart(2, '0')}
+                </div>
+                <p
+                  className="font-mono uppercase"
+                  style={{
+                    fontSize: 'var(--text-xs)',
+                    letterSpacing: '0.08em',
+                    color: 'var(--color-accent)',
+                    marginBottom: '0.5rem',
+                  }}
+                >
+                  {currentPhase?.title}
+                </p>
+              </div>
               <h1
                 className="font-display"
                 style={{
-                  fontSize: 'clamp(2.25rem, 5vw, 3.5rem)',
-                  lineHeight: 1,
+                  fontSize: 'clamp(1.75rem, 4vw, 2.75rem)',
+                  lineHeight: 0.95,
                   color: 'var(--color-text)',
                 }}
               >
@@ -770,11 +778,12 @@ export default function ProjectPage() {
                 <span
                   className="badge mt-6 inline-flex"
                   style={{
-                    backgroundColor: 'var(--color-success-light)',
-                    color: 'var(--color-success)',
+                    backgroundColor: 'var(--color-accent)',
+                    color: 'var(--color-bg)',
+                    borderColor: 'var(--color-accent)',
                   }}
                 >
-                  <Check size={10} /> Étape complétée
+                  ★ Étape complétée
                 </span>
               )}
             </section>
@@ -782,13 +791,15 @@ export default function ProjectPage() {
             {/* Fields */}
             {currentStep.fields && currentStep.fields.length > 0 && (
               <section className="mb-14">
-                <div className="flex items-baseline justify-between mb-6">
+                <div
+                  className="flex items-baseline justify-between pb-3 mb-6"
+                  style={{ borderBottom: '1px solid var(--color-text)' }}
+                >
                   <p
                     className="font-mono uppercase"
                     style={{
                       fontSize: 'var(--text-xs)',
                       letterSpacing: '0.1em',
-                      color: 'var(--color-text-tertiary)',
                     }}
                   >
                     Documentation
@@ -797,7 +808,7 @@ export default function ProjectPage() {
                     className="font-mono"
                     style={{
                       fontSize: 'var(--text-xs)',
-                      color: filledFieldsCount === totalFieldsCount ? 'var(--color-success)' : 'var(--color-text-secondary)',
+                      color: filledFieldsCount === totalFieldsCount ? 'var(--color-accent)' : 'var(--color-text-secondary)',
                     }}
                   >
                     {filledFieldsCount} / {totalFieldsCount}
@@ -815,21 +826,21 @@ export default function ProjectPage() {
                           <label
                             className="font-display flex items-baseline gap-2"
                             style={{
-                              fontSize: 'var(--text-lg)',
+                              fontSize: 'var(--text-md)',
                               color: 'var(--color-text)',
-                              lineHeight: 1.2,
+                              lineHeight: 1.1,
+                              textTransform: 'uppercase',
+                              fontWeight: 700,
                             }}
                           >
                             {isFilled && !isEditing && (
                               <span
                                 className="inline-flex items-center justify-center success-indicator flex-shrink-0"
                                 style={{
-                                  width: '14px',
-                                  height: '14px',
-                                  borderRadius: '50%',
-                                  backgroundColor: 'var(--color-success)',
+                                  width: '12px',
+                                  height: '12px',
+                                  backgroundColor: 'var(--color-accent)',
                                   color: 'var(--color-bg)',
-                                  marginTop: '4px',
                                 }}
                               >
                                 <Check size={8} />
@@ -864,7 +875,7 @@ export default function ProjectPage() {
                               style={{
                                 fontSize: 'var(--text-xs)',
                                 letterSpacing: '0.06em',
-                                color: 'var(--color-success)',
+                                color: 'var(--color-accent)',
                               }}
                             >
                               <Check size={11} />
@@ -878,15 +889,15 @@ export default function ProjectPage() {
                             onClick={() => setEditingField(field.id)}
                             className="cursor-pointer transition-colors"
                             style={{
-                              padding: '0.875rem 1rem',
-                              borderLeft: '2px solid var(--color-border)',
+                              padding: '0.75rem 1rem',
+                              borderLeft: '2px solid var(--color-text)',
                               color: 'var(--color-text-secondary)',
                               fontSize: 'var(--text-sm)',
                               lineHeight: 1.6,
                               whiteSpace: 'pre-wrap',
                             }}
                             onMouseEnter={(e) => (e.currentTarget.style.borderLeftColor = 'var(--color-accent)')}
-                            onMouseLeave={(e) => (e.currentTarget.style.borderLeftColor = 'var(--color-border)')}
+                            onMouseLeave={(e) => (e.currentTarget.style.borderLeftColor = 'var(--color-text)')}
                           >
                             {displayValue}
                           </div>
@@ -900,21 +911,24 @@ export default function ProjectPage() {
               </section>
             )}
 
-            {/* Checklist — accordion "Revue" */}
+            {/* Checklist accordion */}
             {currentStep.checklist && currentStep.checklist.length > 0 && (
               <section className="mb-14">
                 <button
                   onClick={() => setChecklistOpen(!checklistOpen)}
                   className="w-full flex items-baseline justify-between py-3 group transition-colors"
-                  style={{ borderTop: '1px solid var(--color-border)', borderBottom: checklistOpen ? '1px solid var(--color-border)' : 'none' }}
+                  style={{
+                    borderTop: '1px solid var(--color-text)',
+                    borderBottom: checklistOpen ? '1px solid var(--color-text)' : '1px solid var(--color-text)',
+                  }}
                 >
                   <div className="flex items-baseline gap-3">
                     <ChevronDown
-                      size={14}
+                      size={12}
                       style={{
                         transform: checklistOpen ? 'rotate(0deg)' : 'rotate(-90deg)',
                         transition: 'transform var(--duration-fast) var(--ease)',
-                        color: 'var(--color-text-tertiary)',
+                        color: 'var(--color-text)',
                       }}
                     />
                     <span
@@ -922,7 +936,6 @@ export default function ProjectPage() {
                       style={{
                         fontSize: 'var(--text-xs)',
                         letterSpacing: '0.1em',
-                        color: 'var(--color-text-secondary)',
                       }}
                     >
                       Revue de l'étape
@@ -932,7 +945,7 @@ export default function ProjectPage() {
                     className="font-mono"
                     style={{
                       fontSize: 'var(--text-xs)',
-                      color: checkedCount === totalCheckCount ? 'var(--color-success)' : 'var(--color-text-secondary)',
+                      color: checkedCount === totalCheckCount ? 'var(--color-accent)' : 'var(--color-text-secondary)',
                     }}
                   >
                     {checkedCount} / {totalCheckCount}
@@ -972,13 +985,13 @@ export default function ProjectPage() {
               </section>
             )}
 
-            {/* Deliverable — editorial callout */}
+            {/* Deliverable callout */}
             {currentStep.deliverable && (
               <section
                 className="mb-14"
                 style={{
-                  paddingLeft: '1.5rem',
-                  borderLeft: `2px solid var(--color-accent)`,
+                  paddingLeft: '1.25rem',
+                  borderLeft: `2px solid var(--color-text)`,
                 }}
               >
                 <p
@@ -1003,7 +1016,7 @@ export default function ProjectPage() {
             {/* Navigation */}
             <nav
               className="flex items-center justify-between pt-8"
-              style={{ borderTop: '1px solid var(--color-border)' }}
+              style={{ borderTop: '1px solid var(--color-text)' }}
             >
               {prevStep ? (
                 <button
@@ -1012,7 +1025,7 @@ export default function ProjectPage() {
                     setActiveStep(prevStep.id);
                     updateProject(id, { currentPhase: prevStep.phaseId, currentStep: prevStep.id });
                   }}
-                  className="group"
+                  className="text-left group"
                 >
                   <span
                     className="font-mono uppercase block"
@@ -1028,9 +1041,11 @@ export default function ProjectPage() {
                   <span
                     className="font-display"
                     style={{
-                      fontSize: 'var(--text-lg)',
-                      color: 'var(--color-text-secondary)',
-                      lineHeight: 1.2,
+                      fontSize: 'var(--text-sm)',
+                      fontWeight: 700,
+                      color: 'var(--color-text)',
+                      lineHeight: 1.1,
+                      textTransform: 'uppercase',
                     }}
                   >
                     {prevStep.title}
@@ -1061,9 +1076,11 @@ export default function ProjectPage() {
                   <span
                     className="font-display"
                     style={{
-                      fontSize: 'var(--text-lg)',
+                      fontSize: 'var(--text-sm)',
+                      fontWeight: 800,
                       color: 'var(--color-text)',
-                      lineHeight: 1.2,
+                      lineHeight: 1.1,
+                      textTransform: 'uppercase',
                     }}
                   >
                     {nextStep.title}
@@ -1073,11 +1090,12 @@ export default function ProjectPage() {
                 <span
                   className="badge"
                   style={{
-                    backgroundColor: 'var(--color-success)',
+                    backgroundColor: 'var(--color-accent)',
                     color: 'var(--color-bg)',
+                    borderColor: 'var(--color-accent)',
                   }}
                 >
-                  <Check size={10} /> Fin du parcours
+                  ★ Fin du parcours
                 </span>
               )}
             </nav>
@@ -1087,24 +1105,24 @@ export default function ProjectPage() {
 
       <KeyboardShortcuts isOpen={showKeyboardShortcuts} onClose={() => setShowKeyboardShortcuts(false)} />
 
-      {/* Summary panel — editorial */}
+      {/* Summary panel */}
       {showSummary && (
         <div className="fixed inset-0 z-50 flex">
           <div
             className="absolute inset-0 sidebar-overlay"
-            style={{ backgroundColor: 'rgb(26 23 20 / 0.35)' }}
+            style={{ backgroundColor: 'rgb(0 0 0 / 0.35)' }}
             onClick={() => setShowSummary(false)}
           />
           <div
             className="absolute right-0 top-0 bottom-0 w-full max-w-xl slide-panel overflow-hidden flex flex-col"
             style={{
               backgroundColor: 'var(--color-bg)',
-              borderLeft: '1px solid var(--color-border)',
+              borderLeft: '1px solid var(--color-text)',
             }}
           >
             <div
-              className="px-8 py-8 flex items-start justify-between"
-              style={{ borderBottom: '1px solid var(--color-border)' }}
+              className="px-8 py-6 flex items-baseline justify-between"
+              style={{ borderBottom: '1px solid var(--color-text)' }}
             >
               <div>
                 <p
@@ -1115,52 +1133,59 @@ export default function ProjectPage() {
                     color: 'var(--color-text-tertiary)',
                   }}
                 >
-                  Récapitulatif
+                  Récapitulatif · F.01
                 </p>
-                <h2 className="font-display" style={{ fontSize: 'var(--text-2xl)', lineHeight: 1 }}>
+                <h2 className="font-display" style={{ fontSize: 'var(--text-xl)', lineHeight: 0.95 }}>
                   {project.title}
                 </h2>
               </div>
               <button
                 onClick={() => setShowSummary(false)}
                 className="p-2 transition-colors"
-                style={{ color: 'var(--color-text-tertiary)' }}
+                style={{ color: 'var(--color-text)' }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--color-accent)')}
+                onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--color-text)')}
               >
-                <X size={18} />
+                <X size={16} />
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto px-8 py-6">
+            <div className="flex-1 overflow-y-auto px-8 py-8">
               {getSummaryData().length === 0 ? (
                 <div className="py-16 text-center">
                   <p
-                    className="font-display italic"
+                    className="font-display"
                     style={{
                       fontSize: 'var(--text-lg)',
                       color: 'var(--color-text-tertiary)',
+                      textTransform: 'uppercase',
+                      lineHeight: 0.95,
                     }}
                   >
-                    Rien à récapituler pour l'instant.
+                    Rien à récapituler<br />pour l'instant.
                   </p>
                 </div>
               ) : (
                 <div className="space-y-10">
                   {getSummaryData().map(phaseData => (
                     <div key={phaseData.phase.id}>
-                      <div className="flex items-baseline justify-between mb-3">
+                      <div
+                        className="flex items-baseline justify-between mb-4 pb-2"
+                        style={{ borderBottom: '1px solid var(--color-text)' }}
+                      >
                         <div className="flex items-baseline gap-3">
                           <span
                             className="num-display"
                             style={{
                               fontSize: 'var(--text-xl)',
-                              color: phaseData.progress === 100 ? 'var(--color-success)' : 'var(--color-accent)',
+                              color: phaseData.progress === 100 ? 'var(--color-accent)' : 'var(--color-text)',
                             }}
                           >
                             {String(phaseData.phase.number).padStart(2, '0')}
                           </span>
                           <span
                             className="font-display"
-                            style={{ fontSize: 'var(--text-lg)', color: 'var(--color-text)' }}
+                            style={{ fontSize: 'var(--text-md)', color: 'var(--color-text)', textTransform: 'uppercase' }}
                           >
                             {phaseData.phase.title}
                           </span>
@@ -1169,14 +1194,14 @@ export default function ProjectPage() {
                           className="font-mono"
                           style={{
                             fontSize: 'var(--text-xs)',
-                            color: phaseData.progress === 100 ? 'var(--color-success)' : 'var(--color-text-secondary)',
+                            color: phaseData.progress === 100 ? 'var(--color-accent)' : 'var(--color-text-secondary)',
                           }}
                         >
                           {phaseData.progress}%
                         </span>
                       </div>
                       {phaseData.fields.length > 0 && (
-                        <div className="space-y-4 pl-7">
+                        <div className="space-y-5 pl-9">
                           {phaseData.fields.map((field, idx) => (
                             <div key={idx}>
                               <p
@@ -1209,7 +1234,7 @@ export default function ProjectPage() {
               )}
             </div>
 
-            <div className="px-8 py-6" style={{ borderTop: '1px solid var(--color-border)' }}>
+            <div className="px-8 py-6" style={{ borderTop: '1px solid var(--color-text)' }}>
               <button
                 onClick={() => {
                   exportProjectMarkdown(id);
