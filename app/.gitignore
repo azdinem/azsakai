@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# Mockups locaux (interview visuelle, non déployés)
+public/mockups/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
