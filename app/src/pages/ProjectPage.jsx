@@ -32,7 +32,6 @@ export default function ProjectPage() {
   const navigate = useNavigate();
   const { getProject, updateProject, updateProjectField, toggleChecklistItem, exportProjectMarkdown } = useData();
 
-  const [project, setProject] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activePhase, setActivePhase] = useState('phase0');
   const [activeStep, setActiveStep] = useState('step0_1');
@@ -45,12 +44,14 @@ export default function ProjectPage() {
   const [editingField, setEditingField] = useState(null);
   const [checklistOpen, setChecklistOpen] = useState(false);
 
+  // Dériver le projet directement du context à chaque render (évite le décalage state local / context qui faisait perdre le focus aux inputs)
+  const project = isLoading ? null : getProject(id);
+
   useEffect(() => {
     setIsLoading(true);
     const timer = setTimeout(() => {
       const p = getProject(id);
       if (p) {
-        setProject(p);
         setActivePhase(p.currentPhase || 'phase0');
         setActiveStep(p.currentStep || 'step0_1');
       }
@@ -58,13 +59,6 @@ export default function ProjectPage() {
     }, 300);
     return () => clearTimeout(timer);
   }, [id, getProject]);
-
-  useEffect(() => {
-    if (!isLoading) {
-      const p = getProject(id);
-      if (p) setProject(p);
-    }
-  });
 
   useEffect(() => {
     if (project) {
