@@ -299,7 +299,7 @@ export default function Dashboard() {
           </section>
         ) : (
           <section style={{ borderTop: '1px solid var(--color-text)' }}>
-            {filteredProjects.map((project, idx) => {
+            {filteredProjects.map((project) => {
               const progress = calculateProgress(project);
               const currentPhase = getCurrentPhaseInfo(project);
               const isCompleted = progress === 100;
