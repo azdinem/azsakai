@@ -1,12 +1,17 @@
 import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { FileText, AlertCircle, Check, Target, LayoutTemplate, PenLine } from '../components/Icons';
+import { AlertCircle } from '../components/Icons';
 
-const features = [
-  { icon: Target, text: 'Processus SEO en 9 phases' },
-  { icon: LayoutTemplate, text: 'Templates et checklists' },
-  { icon: PenLine, text: 'Suivi de progression' },
-  { icon: Check, text: 'Export Markdown' },
+const PHASES_LIST = [
+  'Cadrage Initial',
+  'Définition du Scope',
+  'Structuration Sémantique',
+  'Préparation à la Rédaction',
+  'Rédaction',
+  'Mise en Page et Médias',
+  'Relecture et Contrôle Qualité',
+  'Maillage Interne',
+  'Publication et Mesure',
 ];
 
 export default function LoginPage() {
@@ -19,93 +24,175 @@ export default function LoginPage() {
     e.preventDefault();
     setError('');
     setIsLoading(true);
-
     const result = await login(password);
-
-    if (!result.success) {
-      setError(result.error);
-    }
-
+    if (!result.success) setError(result.error);
     setIsLoading(false);
   };
 
   return (
-    <div className="min-h-screen flex">
-      {/* Left Panel - Branding */}
-      <div
-        className="hidden lg:flex lg:w-1/2 flex-col justify-between p-12"
+    <div className="min-h-screen flex" style={{ backgroundColor: 'var(--color-bg)' }}>
+      {/* Left — editorial pitch */}
+      <aside
+        className="hidden lg:flex lg:w-[45%] flex-col justify-between px-14 py-12"
         style={{
-          background: 'linear-gradient(135deg, var(--color-accent) 0%, #1e40af 50%, #7c3aed 100%)'
+          backgroundColor: 'var(--color-text)',
+          color: 'var(--color-bg)',
         }}
       >
-        <div>
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
-              <FileText size={28} className="text-white" />
-            </div>
-            <h1 className="text-[var(--text-2xl)] font-bold text-white" style={{ fontFamily: 'var(--font-heading)' }}>
-              Content Process
-            </h1>
-          </div>
-          <p className="text-white/80 text-[var(--text-lg)] mt-4 max-w-md">
-            Votre assistant de création de contenu SEO optimisé, étape par étape.
+        <header className="flex items-center gap-2">
+          <span
+            className="font-mono uppercase"
+            style={{
+              fontSize: 'var(--text-xs)',
+              letterSpacing: '0.08em',
+              color: 'var(--color-bg)',
+              opacity: 0.6,
+            }}
+          >
+            azsakai
+          </span>
+          <span className="opacity-40" style={{ color: 'var(--color-bg)' }}>·</span>
+          <span
+            className="font-mono"
+            style={{
+              fontSize: 'var(--text-xs)',
+              letterSpacing: '0.04em',
+              color: 'var(--color-bg)',
+              opacity: 0.6,
+            }}
+          >
+            v1
+          </span>
+        </header>
+
+        <div className="max-w-xl editorial-reveal">
+          <h1
+            className="font-display"
+            style={{
+              fontSize: 'var(--text-display)',
+              lineHeight: 0.95,
+              color: 'var(--color-bg)',
+            }}
+          >
+            L'art éditorial<br />
+            <em style={{ color: 'var(--color-accent)' }}>de la rédaction</em><br />
+            qui plaît à Google<br />
+            <span style={{ opacity: 0.6 }}>&amp; aux LLM.</span>
+          </h1>
+
+          <p
+            className="font-lead mt-8"
+            style={{ color: 'var(--color-bg)', opacity: 0.75, maxWidth: '38ch' }}
+          >
+            Une méthode en neuf phases pour structurer la création d'un contenu qui performe — du cadrage initial à la publication mesurée.
           </p>
         </div>
 
-        <div className="space-y-4">
-          {features.map((feature, index) => (
-            <div
-              key={index}
-              className="flex items-center gap-4 p-4 bg-white/10 backdrop-blur-sm rounded-xl fade-in"
-              style={{ animationDelay: `${index * 0.1}s` }}
-            >
-              <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
-                <feature.icon size={20} className="text-white" />
-              </div>
-              <span className="text-white font-medium text-[var(--text-base)]">
-                {feature.text}
-              </span>
-            </div>
-          ))}
+        <div className="space-y-1">
+          <p
+            className="font-mono uppercase mb-4"
+            style={{
+              fontSize: 'var(--text-xs)',
+              letterSpacing: '0.1em',
+              color: 'var(--color-bg)',
+              opacity: 0.5,
+            }}
+          >
+            Le processus
+          </p>
+          <ol className="space-y-2">
+            {PHASES_LIST.map((label, i) => (
+              <li
+                key={i}
+                className="flex items-baseline gap-4 fade-in"
+                style={{ animationDelay: `${0.08 * i}s` }}
+              >
+                <span
+                  className="font-mono"
+                  style={{
+                    fontSize: 'var(--text-xs)',
+                    color: 'var(--color-accent)',
+                    minWidth: '2ch',
+                  }}
+                >
+                  {String(i).padStart(2, '0')}
+                </span>
+                <span
+                  className="font-display"
+                  style={{
+                    fontSize: 'var(--text-lg)',
+                    color: 'var(--color-bg)',
+                    opacity: 0.85,
+                    lineHeight: 1.2,
+                  }}
+                >
+                  {label}
+                </span>
+              </li>
+            ))}
+          </ol>
         </div>
+      </aside>
 
-        <p className="text-white/60 text-[var(--text-sm)]">
-          Basé sur la méthodologie Thot SEO
-        </p>
-      </div>
-
-      {/* Right Panel - Login Form */}
-      <div className="flex-1 flex items-center justify-center p-8 bg-[var(--color-bg)]">
-        <div className="w-full max-w-md">
-          {/* Mobile Logo */}
-          <div className="lg:hidden text-center mb-8">
-            <div className="w-16 h-16 bg-gradient-to-br from-[var(--color-accent)] to-[var(--color-accent-dark)] rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
-              <FileText size={32} className="text-white" />
-            </div>
-            <h1 className="text-[var(--text-2xl)] font-bold text-[var(--color-text)]" style={{ fontFamily: 'var(--font-heading)' }}>
-              Content Process
+      {/* Right — login */}
+      <main className="flex-1 flex items-center justify-center px-8 py-12">
+        <div className="w-full max-w-sm">
+          {/* Mobile brand mark */}
+          <div className="lg:hidden mb-10">
+            <p
+              className="font-mono uppercase"
+              style={{
+                fontSize: 'var(--text-xs)',
+                letterSpacing: '0.1em',
+                color: 'var(--color-text-tertiary)',
+              }}
+            >
+              azsakai
+            </p>
+            <h1
+              className="font-display mt-3"
+              style={{
+                fontSize: 'clamp(2rem, 10vw, 3.5rem)',
+                lineHeight: 0.95,
+              }}
+            >
+              L'art éditorial<br />
+              <em style={{ color: 'var(--color-accent)' }}>de la rédaction</em>
             </h1>
-            <p className="text-[var(--text-base)] text-[var(--color-text-secondary)] mt-2">
-              Gestionnaire de contenu SEO
-            </p>
           </div>
 
-          {/* Desktop Title */}
-          <div className="hidden lg:block mb-8">
-            <h2 className="text-[var(--text-2xl)] font-bold text-[var(--color-text)]" style={{ fontFamily: 'var(--font-heading)' }}>
-              Connexion
+          <div className="mb-10">
+            <p
+              className="font-mono uppercase mb-3"
+              style={{
+                fontSize: 'var(--text-xs)',
+                letterSpacing: '0.1em',
+                color: 'var(--color-text-tertiary)',
+              }}
+            >
+              Accès
+            </p>
+            <h2
+              className="font-display"
+              style={{
+                fontSize: 'var(--text-3xl)',
+                lineHeight: 1,
+              }}
+            >
+              Connexion à la<br />méthode.
             </h2>
-            <p className="text-[var(--text-base)] text-[var(--color-text-secondary)] mt-2">
-              Entrez votre mot de passe pour accéder à l'application
-            </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label
                 htmlFor="password"
-                className="block text-[var(--text-sm)] font-semibold text-[var(--color-text)] mb-2"
-                style={{ fontFamily: 'var(--font-heading)' }}
+                className="font-mono uppercase block mb-2"
+                style={{
+                  fontSize: 'var(--text-xs)',
+                  letterSpacing: '0.08em',
+                  color: 'var(--color-text-secondary)',
+                }}
               >
                 Mot de passe
               </label>
@@ -114,17 +201,26 @@ export default function LoginPage() {
                 id="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full text-[var(--text-lg)]"
-                placeholder="Entrez votre mot de passe"
+                className="w-full"
+                placeholder="••••••••••"
                 autoFocus
               />
             </div>
 
             {error && (
-              <div className="p-4 bg-[var(--color-error-light)] border border-[var(--color-error)]/20 text-[var(--color-error)] rounded-xl text-[var(--text-sm)] flex items-center gap-3 fade-in">
-                <div className="w-8 h-8 bg-[var(--color-error)]/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <AlertCircle size={18} />
-                </div>
+              <div
+                className="flex items-start gap-3 fade-in"
+                style={{
+                  padding: '0.75rem 1rem',
+                  backgroundColor: 'var(--color-error-light)',
+                  border: '1px solid var(--color-error)',
+                  borderLeftWidth: '3px',
+                  borderRadius: 'var(--radius-sm)',
+                  color: 'var(--color-error)',
+                  fontSize: 'var(--text-sm)',
+                }}
+              >
+                <AlertCircle size={16} className="flex-shrink-0 mt-0.5" />
                 <span>{error}</span>
               </div>
             )}
@@ -132,48 +228,65 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isLoading || !password}
-              className="w-full py-3.5 px-6 rounded-xl font-semibold text-[var(--text-base)] transition-all hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none"
-              style={{
-                background: 'linear-gradient(135deg, var(--color-accent) 0%, var(--color-accent-dark) 100%)',
-                color: 'white',
-                fontFamily: 'var(--font-heading)'
-              }}
+              className="btn-primary w-full"
+              style={{ padding: '0.75rem 1.25rem' }}
             >
               {isLoading ? (
                 <span className="flex items-center justify-center gap-2">
-                  <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" fill="none" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                   </svg>
-                  Connexion en cours...
+                  Connexion…
                 </span>
               ) : (
-                'Se connecter'
+                <span className="flex items-center justify-center gap-2">
+                  <span>Entrer</span>
+                  <span style={{ opacity: 0.6 }}>→</span>
+                </span>
               )}
             </button>
           </form>
 
-          {/* Mobile Features */}
-          <div className="lg:hidden mt-12 pt-8 border-t border-[var(--color-border)]">
-            <p className="text-[var(--text-xs)] text-[var(--color-text-tertiary)] text-center mb-4">
-              Fonctionnalités
+          {/* Mobile phase list — condensed */}
+          <div className="lg:hidden mt-14 pt-8" style={{ borderTop: '1px solid var(--color-border)' }}>
+            <p
+              className="font-mono uppercase mb-4"
+              style={{
+                fontSize: 'var(--text-xs)',
+                letterSpacing: '0.1em',
+                color: 'var(--color-text-tertiary)',
+              }}
+            >
+              Le processus — 9 phases
             </p>
-            <div className="grid grid-cols-2 gap-3">
-              {features.map((feature, index) => (
-                <div
-                  key={index}
-                  className="flex items-center gap-2 p-3 bg-[var(--color-bg-secondary)] rounded-xl"
-                >
-                  <feature.icon size={16} className="text-[var(--color-accent)]" />
-                  <span className="text-[var(--text-xs)] text-[var(--color-text-secondary)]">
-                    {feature.text}
+            <ol className="space-y-1.5">
+              {PHASES_LIST.map((label, i) => (
+                <li key={i} className="flex items-baseline gap-3">
+                  <span
+                    className="font-mono"
+                    style={{
+                      fontSize: 'var(--text-xs)',
+                      color: 'var(--color-accent)',
+                      minWidth: '2ch',
+                    }}
+                  >
+                    {String(i).padStart(2, '0')}
                   </span>
-                </div>
+                  <span
+                    style={{
+                      fontSize: 'var(--text-sm)',
+                      color: 'var(--color-text-secondary)',
+                    }}
+                  >
+                    {label}
+                  </span>
+                </li>
               ))}
-            </div>
+            </ol>
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }
