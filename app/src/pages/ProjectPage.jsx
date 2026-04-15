@@ -174,12 +174,18 @@ export default function ProjectPage() {
   };
 
   const handleFieldChange = (fieldId, value) => {
+    // Rester en mode édition tant que l'utilisateur interagit (évite que le champ bascule en read-mode dès le 1er caractère)
+    setEditingField(fieldId);
     updateProjectField(id, fieldId, value);
     showSaveToast();
     const checklistId = FIELD_TO_CHECKLIST_MAP[fieldId];
     if (checklistId && value && value.length > 0) {
       if (!project.checklist?.[checklistId]) toggleChecklistItem(id, checklistId);
     }
+  };
+
+  const handleFieldFocus = (fieldId) => {
+    setEditingField(fieldId);
   };
 
   const handleCheckToggle = (checkId) => {
