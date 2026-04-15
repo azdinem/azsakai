@@ -622,18 +622,7 @@ export default function ProjectPage() {
               rel="noopener noreferrer"
               className="link-editorial"
             >
-              Azdine
-            </a>
-            <br />
-            <a
-              href="https://claude.com/claude-code"
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ color: 'var(--color-text-tertiary)' }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--color-accent)')}
-              onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--color-text-tertiary)')}
-            >
-              Built with Claude Code ↗
+              Azdine Mansour
             </a>
           </p>
         </div>

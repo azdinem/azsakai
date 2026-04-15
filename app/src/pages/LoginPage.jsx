@@ -31,7 +31,7 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: 'var(--color-bg)' }}>
-      {/* Top masthead bar */}
+      {/* Masthead */}
       <header
         className="flex items-baseline justify-between px-6 lg:px-10 py-4"
         style={{ borderBottom: '1px solid var(--color-text)' }}
@@ -57,187 +57,168 @@ export default function LoginPage() {
         </span>
       </header>
 
-      {/* Hero */}
       <main className="max-w-6xl mx-auto px-6 lg:px-10 py-16 lg:py-24">
-        <section className="editorial-reveal">
-          <div className="grid grid-cols-1 lg:grid-cols-[auto_1fr] gap-8 lg:gap-16 items-end">
-            {/* Giant 09 numeral */}
-            <div
-              className="num-display"
+        <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-12 lg:gap-20">
+
+          {/* LEFT — hero pitch */}
+          <section className="editorial-reveal">
+            <h1
+              className="font-display"
               style={{
-                fontSize: 'var(--text-hero)',
-                color: 'var(--color-text)',
+                fontSize: 'clamp(2.25rem, 5.5vw, 4.5rem)',
+                lineHeight: 0.95,
+                maxWidth: '14ch',
               }}
             >
-              09<sup
-                style={{
-                  fontSize: '0.3em',
-                  verticalAlign: 'top',
-                  color: 'var(--color-accent)',
-                  fontWeight: 500,
-                  letterSpacing: 0,
-                  marginLeft: '0.04em',
-                }}
-              >
-                ★
-              </sup>
-            </div>
+              Une méthode pour<br />
+              écrire du{' '}
+              <span className="mark-accent">contenu</span>
+              <br />
+              qui dure.
+            </h1>
+            <p className="font-lead mt-8" style={{ maxWidth: '48ch' }}>
+              Neuf phases. Une structure. Construit sur la doctrine Thot SEO pour servir à la fois Google et les LLMs. Sans esbroufe.
+            </p>
+          </section>
 
-            <div>
-              <h1
-                className="font-display"
-                style={{
-                  fontSize: 'clamp(2rem, 5vw, 4rem)',
-                  lineHeight: 0.95,
-                  maxWidth: '14ch',
-                }}
-              >
-                Une méthode pour<br />
-                écrire du{' '}
-                <span className="mark-accent">contenu</span>
-                <br />
-                qui dure.
-              </h1>
-              <p className="font-lead mt-6" style={{ maxWidth: '52ch' }}>
-                Neuf phases. Une structure. Construit sur la doctrine Thot SEO pour servir à la fois Google et les LLMs. Sans esbroufe.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        {/* Composants grid: login + process */}
-        <section className="mt-16 lg:mt-24">
-          <div
-            className="flex items-baseline justify-between pb-4 mb-0"
-            style={{ borderBottom: '1px solid var(--color-text)' }}
-          >
-            <span
-              className="font-mono uppercase"
-              style={{
-                fontSize: 'var(--text-xs)',
-                letterSpacing: '0.08em',
-                color: 'var(--color-text)',
-              }}
+          {/* RIGHT — login + process */}
+          <aside>
+            {/* Login form */}
+            <section
+              style={{ border: '1px solid var(--color-text)' }}
             >
-              Access
-            </span>
-            <span className="section-index">A.01</span>
-          </div>
-
-          <div
-            className="grid grid-cols-1 lg:grid-cols-2"
-            style={{ border: '1px solid var(--color-text)', borderTop: 'none' }}
-          >
-            {/* Left — login form */}
-            <div
-              className="px-6 lg:px-10 py-10"
-              style={{ borderRight: '1px solid var(--color-text)' }}
-            >
-              <h2
-                className="font-display"
-                style={{
-                  fontSize: 'var(--text-2xl)',
-                  lineHeight: 0.95,
-                  marginBottom: '0.5rem',
-                }}
+              <div
+                className="flex items-baseline justify-between px-6 py-3"
+                style={{ borderBottom: '1px solid var(--color-text)' }}
               >
-                Entrée.
-              </h2>
-              <p
-                style={{
-                  fontSize: 'var(--text-sm)',
-                  color: 'var(--color-text-secondary)',
-                  marginBottom: '2rem',
-                }}
-              >
-                Saisir le mot de passe pour accéder à la méthode.
-              </p>
-
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div>
-                  <label
-                    htmlFor="password"
-                    className="font-mono uppercase block mb-2"
-                    style={{
-                      fontSize: 'var(--text-xs)',
-                      letterSpacing: '0.1em',
-                      color: 'var(--color-text)',
-                    }}
-                  >
-                    Password
-                  </label>
-                  <input
-                    type="password"
-                    id="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full"
-                    placeholder="••••••••••"
-                    autoFocus
-                  />
-                </div>
-
-                {error && (
-                  <div
-                    className="flex items-start gap-3 fade-in"
-                    style={{
-                      padding: '0.5rem 0.75rem',
-                      border: '1px solid var(--color-accent)',
-                      borderLeftWidth: '3px',
-                      color: 'var(--color-accent)',
-                      fontSize: 'var(--text-sm)',
-                    }}
-                  >
-                    <AlertCircle size={14} className="flex-shrink-0 mt-0.5" />
-                    <span>{error}</span>
-                  </div>
-                )}
-
-                <button
-                  type="submit"
-                  disabled={isLoading || !password}
-                  className="btn-primary w-full"
+                <span
+                  className="font-mono uppercase"
+                  style={{
+                    fontSize: 'var(--text-xs)',
+                    letterSpacing: '0.1em',
+                    color: 'var(--color-text)',
+                  }}
                 >
-                  {isLoading ? (
-                    <span className="flex items-center justify-center gap-2">
-                      <svg className="animate-spin h-3 w-3" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" fill="none" />
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                      </svg>
-                      Connexion…
-                    </span>
-                  ) : (
-                    <span className="flex items-center justify-center gap-2">
-                      <span>Enter</span>
-                      <span>→</span>
-                    </span>
-                  )}
-                </button>
-              </form>
-            </div>
+                  Accès
+                </span>
+                <span className="section-index">A.01</span>
+              </div>
 
-            {/* Right — process list */}
-            <div className="px-6 lg:px-10 py-10">
-              <p
-                className="font-mono uppercase mb-6"
-                style={{
-                  fontSize: 'var(--text-xs)',
-                  letterSpacing: '0.1em',
-                  color: 'var(--color-text-tertiary)',
-                }}
+              <div className="px-6 py-8">
+                <h2
+                  className="font-display"
+                  style={{
+                    fontSize: 'var(--text-2xl)',
+                    lineHeight: 0.95,
+                    marginBottom: '0.5rem',
+                  }}
+                >
+                  Entrée.
+                </h2>
+                <p
+                  style={{
+                    fontSize: 'var(--text-sm)',
+                    color: 'var(--color-text-secondary)',
+                    marginBottom: '2rem',
+                  }}
+                >
+                  Saisir le mot de passe pour accéder à la méthode.
+                </p>
+
+                <form onSubmit={handleSubmit} className="space-y-6">
+                  <div>
+                    <label
+                      htmlFor="password"
+                      className="font-mono uppercase block mb-2"
+                      style={{
+                        fontSize: 'var(--text-xs)',
+                        letterSpacing: '0.1em',
+                        color: 'var(--color-text)',
+                      }}
+                    >
+                      Password
+                    </label>
+                    <input
+                      type="password"
+                      id="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="w-full"
+                      placeholder="••••••••••"
+                      autoFocus
+                    />
+                  </div>
+
+                  {error && (
+                    <div
+                      className="flex items-start gap-3 fade-in"
+                      style={{
+                        padding: '0.5rem 0.75rem',
+                        border: '1px solid var(--color-accent)',
+                        borderLeftWidth: '3px',
+                        color: 'var(--color-accent)',
+                        fontSize: 'var(--text-sm)',
+                      }}
+                    >
+                      <AlertCircle size={14} className="flex-shrink-0 mt-0.5" />
+                      <span>{error}</span>
+                    </div>
+                  )}
+
+                  <button
+                    type="submit"
+                    disabled={isLoading || !password}
+                    className="btn-primary w-full"
+                  >
+                    {isLoading ? (
+                      <span className="flex items-center justify-center gap-2">
+                        <svg className="animate-spin h-3 w-3" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" fill="none" />
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                        </svg>
+                        Connexion…
+                      </span>
+                    ) : (
+                      <span className="flex items-center justify-center gap-2">
+                        <span>Enter</span>
+                        <span>→</span>
+                      </span>
+                    )}
+                  </button>
+                </form>
+              </div>
+            </section>
+
+            {/* Process list — under login */}
+            <section
+              className="mt-8"
+              style={{ border: '1px solid var(--color-text)' }}
+            >
+              <div
+                className="flex items-baseline justify-between px-6 py-3"
+                style={{ borderBottom: '1px solid var(--color-text)' }}
               >
-                Le processus — 9 phases
-              </p>
-              <ol
-                style={{ borderTop: '1px solid var(--color-text)' }}
-              >
+                <span
+                  className="font-mono uppercase"
+                  style={{
+                    fontSize: 'var(--text-xs)',
+                    letterSpacing: '0.1em',
+                    color: 'var(--color-text)',
+                  }}
+                >
+                  Le processus — 9 phases
+                </span>
+                <span className="section-index">A.02</span>
+              </div>
+
+              <ol>
                 {PHASES_LIST.map((label, i) => (
                   <li
                     key={i}
-                    className="flex items-baseline gap-4 py-3 fade-in"
+                    className="flex items-baseline gap-4 px-6 py-2.5 fade-in"
                     style={{
-                      borderBottom: '1px solid var(--color-text)',
-                      animationDelay: `${0.05 * i}s`,
+                      borderBottom: i < PHASES_LIST.length - 1 ? '1px solid var(--color-text)' : 'none',
+                      animationDelay: `${0.04 * i}s`,
                     }}
                   >
                     <span
@@ -264,9 +245,9 @@ export default function LoginPage() {
                   </li>
                 ))}
               </ol>
-            </div>
-          </div>
-        </section>
+            </section>
+          </aside>
+        </div>
       </main>
     </div>
   );
