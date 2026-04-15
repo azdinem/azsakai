@@ -30,262 +30,243 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex" style={{ backgroundColor: 'var(--color-bg)' }}>
-      {/* Left — editorial pitch */}
-      <aside
-        className="hidden lg:flex lg:w-[45%] flex-col justify-between px-14 py-12"
-        style={{
-          backgroundColor: 'var(--color-text)',
-          color: 'var(--color-bg)',
-        }}
+    <div className="min-h-screen" style={{ backgroundColor: 'var(--color-bg)' }}>
+      {/* Top masthead bar */}
+      <header
+        className="flex items-baseline justify-between px-6 lg:px-10 py-4"
+        style={{ borderBottom: '1px solid var(--color-text)' }}
       >
-        <header className="flex items-center gap-2">
-          <span
-            className="font-mono uppercase"
-            style={{
-              fontSize: 'var(--text-xs)',
-              letterSpacing: '0.08em',
-              color: 'var(--color-bg)',
-              opacity: 0.6,
-            }}
-          >
-            azsakai
-          </span>
-          <span className="opacity-40" style={{ color: 'var(--color-bg)' }}>·</span>
-          <span
-            className="font-mono"
-            style={{
-              fontSize: 'var(--text-xs)',
-              letterSpacing: '0.04em',
-              color: 'var(--color-bg)',
-              opacity: 0.6,
-            }}
-          >
-            v1
-          </span>
-        </header>
+        <span
+          className="font-display"
+          style={{
+            fontSize: 'var(--text-base)',
+            fontWeight: 800,
+            letterSpacing: '0.02em',
+          }}
+        >
+          AZSAKAI
+        </span>
+        <span
+          className="font-mono"
+          style={{
+            fontSize: 'var(--text-xs)',
+            color: 'var(--color-text)',
+          }}
+        >
+          Issue 01 / 2026
+        </span>
+      </header>
 
-        <div className="max-w-xl editorial-reveal">
-          <h1
-            className="font-display"
-            style={{
-              fontSize: 'var(--text-display)',
-              lineHeight: 0.95,
-              color: 'var(--color-bg)',
-            }}
-          >
-            L'art éditorial<br />
-            <em style={{ color: 'var(--color-accent)' }}>de la rédaction</em><br />
-            qui plaît à Google<br />
-            <span style={{ opacity: 0.6 }}>&amp; aux LLM.</span>
-          </h1>
-
-          <p
-            className="font-lead mt-8"
-            style={{ color: 'var(--color-bg)', opacity: 0.75, maxWidth: '38ch' }}
-          >
-            Une méthode en neuf phases pour structurer la création d'un contenu qui performe — du cadrage initial à la publication mesurée.
-          </p>
-        </div>
-
-        <div className="space-y-1">
-          <p
-            className="font-mono uppercase mb-4"
-            style={{
-              fontSize: 'var(--text-xs)',
-              letterSpacing: '0.1em',
-              color: 'var(--color-bg)',
-              opacity: 0.5,
-            }}
-          >
-            Le processus
-          </p>
-          <ol className="space-y-2">
-            {PHASES_LIST.map((label, i) => (
-              <li
-                key={i}
-                className="flex items-baseline gap-4 fade-in"
-                style={{ animationDelay: `${0.08 * i}s` }}
+      {/* Hero */}
+      <main className="max-w-6xl mx-auto px-6 lg:px-10 py-16 lg:py-24">
+        <section className="editorial-reveal">
+          <div className="grid grid-cols-1 lg:grid-cols-[auto_1fr] gap-8 lg:gap-16 items-end">
+            {/* Giant 09 numeral */}
+            <div
+              className="num-display"
+              style={{
+                fontSize: 'var(--text-hero)',
+                color: 'var(--color-text)',
+              }}
+            >
+              09<sup
+                style={{
+                  fontSize: '0.3em',
+                  verticalAlign: 'top',
+                  color: 'var(--color-accent)',
+                  fontWeight: 500,
+                  letterSpacing: 0,
+                  marginLeft: '0.04em',
+                }}
               >
-                <span
-                  className="font-mono"
-                  style={{
-                    fontSize: 'var(--text-xs)',
-                    color: 'var(--color-accent)',
-                    minWidth: '2ch',
-                  }}
-                >
-                  {String(i).padStart(2, '0')}
-                </span>
-                <span
-                  className="font-display"
-                  style={{
-                    fontSize: 'var(--text-lg)',
-                    color: 'var(--color-bg)',
-                    opacity: 0.85,
-                    lineHeight: 1.2,
-                  }}
-                >
-                  {label}
-                </span>
-              </li>
-            ))}
-          </ol>
-        </div>
-      </aside>
+                ★
+              </sup>
+            </div>
 
-      {/* Right — login */}
-      <main className="flex-1 flex items-center justify-center px-8 py-12">
-        <div className="w-full max-w-sm">
-          {/* Mobile brand mark */}
-          <div className="lg:hidden mb-10">
-            <p
+            <div>
+              <h1
+                className="font-display"
+                style={{
+                  fontSize: 'clamp(2rem, 5vw, 4rem)',
+                  lineHeight: 0.95,
+                  maxWidth: '14ch',
+                }}
+              >
+                Une méthode pour<br />
+                écrire du{' '}
+                <span className="mark-accent">contenu</span>
+                <br />
+                qui dure.
+              </h1>
+              <p className="font-lead mt-6" style={{ maxWidth: '52ch' }}>
+                Neuf phases. Une structure. Construit sur la doctrine Thot SEO pour servir à la fois Google et les LLMs. Sans esbroufe.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* Composants grid: login + process */}
+        <section className="mt-16 lg:mt-24">
+          <div
+            className="flex items-baseline justify-between pb-4 mb-0"
+            style={{ borderBottom: '1px solid var(--color-text)' }}
+          >
+            <span
               className="font-mono uppercase"
               style={{
                 fontSize: 'var(--text-xs)',
-                letterSpacing: '0.1em',
-                color: 'var(--color-text-tertiary)',
+                letterSpacing: '0.08em',
+                color: 'var(--color-text)',
               }}
             >
-              azsakai
-            </p>
-            <h1
-              className="font-display mt-3"
-              style={{
-                fontSize: 'clamp(2rem, 10vw, 3.5rem)',
-                lineHeight: 0.95,
-              }}
-            >
-              L'art éditorial<br />
-              <em style={{ color: 'var(--color-accent)' }}>de la rédaction</em>
-            </h1>
+              Access
+            </span>
+            <span className="section-index">A.01</span>
           </div>
 
-          <div className="mb-10">
-            <p
-              className="font-mono uppercase mb-3"
-              style={{
-                fontSize: 'var(--text-xs)',
-                letterSpacing: '0.1em',
-                color: 'var(--color-text-tertiary)',
-              }}
+          <div
+            className="grid grid-cols-1 lg:grid-cols-2"
+            style={{ border: '1px solid var(--color-text)', borderTop: 'none' }}
+          >
+            {/* Left — login form */}
+            <div
+              className="px-6 lg:px-10 py-10"
+              style={{ borderRight: '1px solid var(--color-text)' }}
             >
-              Accès
-            </p>
-            <h2
-              className="font-display"
-              style={{
-                fontSize: 'var(--text-3xl)',
-                lineHeight: 1,
-              }}
-            >
-              Connexion à la<br />méthode.
-            </h2>
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div>
-              <label
-                htmlFor="password"
-                className="font-mono uppercase block mb-2"
+              <h2
+                className="font-display"
                 style={{
-                  fontSize: 'var(--text-xs)',
-                  letterSpacing: '0.08em',
-                  color: 'var(--color-text-secondary)',
+                  fontSize: 'var(--text-2xl)',
+                  lineHeight: 0.95,
+                  marginBottom: '0.5rem',
                 }}
               >
-                Mot de passe
-              </label>
-              <input
-                type="password"
-                id="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full"
-                placeholder="••••••••••"
-                autoFocus
-              />
-            </div>
-
-            {error && (
-              <div
-                className="flex items-start gap-3 fade-in"
+                Entrée.
+              </h2>
+              <p
                 style={{
-                  padding: '0.75rem 1rem',
-                  backgroundColor: 'var(--color-error-light)',
-                  border: '1px solid var(--color-error)',
-                  borderLeftWidth: '3px',
-                  borderRadius: 'var(--radius-sm)',
-                  color: 'var(--color-error)',
                   fontSize: 'var(--text-sm)',
+                  color: 'var(--color-text-secondary)',
+                  marginBottom: '2rem',
                 }}
               >
-                <AlertCircle size={16} className="flex-shrink-0 mt-0.5" />
-                <span>{error}</span>
-              </div>
-            )}
+                Saisir le mot de passe pour accéder à la méthode.
+              </p>
 
-            <button
-              type="submit"
-              disabled={isLoading || !password}
-              className="btn-primary w-full"
-              style={{ padding: '0.75rem 1.25rem' }}
-            >
-              {isLoading ? (
-                <span className="flex items-center justify-center gap-2">
-                  <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" fill="none" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                  </svg>
-                  Connexion…
-                </span>
-              ) : (
-                <span className="flex items-center justify-center gap-2">
-                  <span>Entrer</span>
-                  <span style={{ opacity: 0.6 }}>→</span>
-                </span>
-              )}
-            </button>
-          </form>
-
-          {/* Mobile phase list — condensed */}
-          <div className="lg:hidden mt-14 pt-8" style={{ borderTop: '1px solid var(--color-border)' }}>
-            <p
-              className="font-mono uppercase mb-4"
-              style={{
-                fontSize: 'var(--text-xs)',
-                letterSpacing: '0.1em',
-                color: 'var(--color-text-tertiary)',
-              }}
-            >
-              Le processus — 9 phases
-            </p>
-            <ol className="space-y-1.5">
-              {PHASES_LIST.map((label, i) => (
-                <li key={i} className="flex items-baseline gap-3">
-                  <span
-                    className="font-mono"
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div>
+                  <label
+                    htmlFor="password"
+                    className="font-mono uppercase block mb-2"
                     style={{
                       fontSize: 'var(--text-xs)',
-                      color: 'var(--color-accent)',
-                      minWidth: '2ch',
+                      letterSpacing: '0.1em',
+                      color: 'var(--color-text)',
                     }}
                   >
-                    {String(i).padStart(2, '0')}
-                  </span>
-                  <span
+                    Password
+                  </label>
+                  <input
+                    type="password"
+                    id="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full"
+                    placeholder="••••••••••"
+                    autoFocus
+                  />
+                </div>
+
+                {error && (
+                  <div
+                    className="flex items-start gap-3 fade-in"
                     style={{
+                      padding: '0.5rem 0.75rem',
+                      border: '1px solid var(--color-accent)',
+                      borderLeftWidth: '3px',
+                      color: 'var(--color-accent)',
                       fontSize: 'var(--text-sm)',
-                      color: 'var(--color-text-secondary)',
                     }}
                   >
-                    {label}
-                  </span>
-                </li>
-              ))}
-            </ol>
+                    <AlertCircle size={14} className="flex-shrink-0 mt-0.5" />
+                    <span>{error}</span>
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={isLoading || !password}
+                  className="btn-primary w-full"
+                >
+                  {isLoading ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <svg className="animate-spin h-3 w-3" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" fill="none" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                      </svg>
+                      Connexion…
+                    </span>
+                  ) : (
+                    <span className="flex items-center justify-center gap-2">
+                      <span>Enter</span>
+                      <span>→</span>
+                    </span>
+                  )}
+                </button>
+              </form>
+            </div>
+
+            {/* Right — process list */}
+            <div className="px-6 lg:px-10 py-10">
+              <p
+                className="font-mono uppercase mb-6"
+                style={{
+                  fontSize: 'var(--text-xs)',
+                  letterSpacing: '0.1em',
+                  color: 'var(--color-text-tertiary)',
+                }}
+              >
+                Le processus — 9 phases
+              </p>
+              <ol
+                style={{ borderTop: '1px solid var(--color-text)' }}
+              >
+                {PHASES_LIST.map((label, i) => (
+                  <li
+                    key={i}
+                    className="flex items-baseline gap-4 py-3 fade-in"
+                    style={{
+                      borderBottom: '1px solid var(--color-text)',
+                      animationDelay: `${0.05 * i}s`,
+                    }}
+                  >
+                    <span
+                      className="font-mono"
+                      style={{
+                        fontSize: 'var(--text-xs)',
+                        color: 'var(--color-text-tertiary)',
+                        minWidth: '2ch',
+                      }}
+                    >
+                      {String(i).padStart(2, '0')}
+                    </span>
+                    <span
+                      className="font-display"
+                      style={{
+                        fontSize: 'var(--text-sm)',
+                        fontWeight: 700,
+                        color: 'var(--color-text)',
+                        lineHeight: 1.1,
+                      }}
+                    >
+                      {label}
+                    </span>
+                  </li>
+                ))}
+              </ol>
+            </div>
           </div>
-        </div>
+        </section>
       </main>
     </div>
   );
