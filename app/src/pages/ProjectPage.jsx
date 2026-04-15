@@ -43,6 +43,8 @@ export default function ProjectPage() {
   const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState(false);
   const [editingField, setEditingField] = useState(null);
   const [checklistOpen, setChecklistOpen] = useState(false);
+  // Drafts locaux par fieldId — la saisie reste en mémoire locale jusqu'au clic sur "Sauvegarder"
+  const [drafts, setDrafts] = useState({});
 
   // Dériver le projet directement du context à chaque render (évite le décalage state local / context qui faisait perdre le focus aux inputs)
   const project = isLoading ? null : getProject(id);
@@ -52,6 +54,7 @@ export default function ProjectPage() {
     // (updateProjectField → context re-render → new getProject function ref)
     // et ça faisait refirer cet effet en boucle, réinstallant le skeleton 300ms à chaque frappe.
     setIsLoading(true);
+    setDrafts({}); // reset des drafts au changement de projet
     const timer = setTimeout(() => {
       const p = getProject(id);
       if (p) {
@@ -172,28 +175,55 @@ export default function ProjectPage() {
   };
 
   const handleFieldChange = (fieldId, value) => {
-    // Rester en mode édition tant que l'utilisateur interagit (évite que le champ bascule en read-mode dès le 1er caractère)
+    // Ne met à jour que le draft local — la persistance a lieu uniquement au clic sur "Sauvegarder"
+    setDrafts(prev => ({ ...prev, [fieldId]: value }));
     setEditingField(fieldId);
-    updateProjectField(id, fieldId, value);
+  };
+
+  const hasDraft = (fieldId) => drafts[fieldId] !== undefined;
+
+  const handleSaveField = (fieldId) => {
+    const draftValue = drafts[fieldId];
+    if (draftValue === undefined) {
+      // Rien à sauvegarder, juste fermer l'édition
+      setEditingField(null);
+      return;
+    }
+    updateProjectField(id, fieldId, draftValue);
     showSaveToast();
+    setEditingField(null);
+    setDrafts(prev => {
+      const next = { ...prev };
+      delete next[fieldId];
+      return next;
+    });
+    // Auto-cocher l'item de checklist lié au moment de la sauvegarde (plus d'auto-check sur frappe)
     const checklistId = FIELD_TO_CHECKLIST_MAP[fieldId];
-    if (checklistId && value && value.length > 0) {
-      if (!project.checklist?.[checklistId]) toggleChecklistItem(id, checklistId);
+    const hasContent = typeof draftValue === 'string'
+      ? draftValue.trim().length > 0
+      : Array.isArray(draftValue) ? draftValue.length > 0 : Boolean(draftValue);
+    if (checklistId && hasContent && !project.checklist?.[checklistId]) {
+      toggleChecklistItem(id, checklistId);
     }
   };
 
-  const handleFieldFocus = (fieldId) => {
-    setEditingField(fieldId);
+  const handleCancelField = (fieldId) => {
+    setDrafts(prev => {
+      const next = { ...prev };
+      delete next[fieldId];
+      return next;
+    });
+    setEditingField(null);
   };
 
   const handleCheckToggle = (checkId) => {
+    // Persistance immédiate pour la checklist (pas de draft/save sur les cases à cocher) — pas de toast non plus
     toggleChecklistItem(id, checkId);
-    showSaveToast();
   };
 
   const handleTitleChange = (newTitle) => {
+    // Persistance immédiate pour le titre du projet dans la sidebar — pas de toast
     updateProject(id, { title: newTitle });
-    showSaveToast();
   };
 
   const getFieldOptions = (optionsRef) => {
@@ -239,7 +269,10 @@ export default function ProjectPage() {
   };
 
   const renderField = (field) => {
-    const value = project.fields?.[field.id] || '';
+    // Priorité au draft local si présent, sinon valeur sauvegardée
+    const value = drafts[field.id] !== undefined
+      ? drafts[field.id]
+      : (project.fields?.[field.id] || '');
     const options = getFieldOptions(field.options);
     switch (field.type) {
       case 'text':
@@ -845,7 +878,7 @@ export default function ProjectPage() {
                             )}
                           </label>
 
-                          {isFilled && !isEditing && (
+                          {isFilled && !isEditing && !hasDraft(field.id) && (
                             <button
                               onClick={() => setEditingField(field.id)}
                               className="font-mono uppercase flex items-center gap-1.5 py-1 flex-shrink-0 transition-colors"
@@ -861,23 +894,41 @@ export default function ProjectPage() {
                               <span>Modifier</span>
                             </button>
                           )}
-                          {isEditing && (
-                            <button
-                              onClick={() => setEditingField(null)}
-                              className="font-mono uppercase flex items-center gap-1.5 py-1 flex-shrink-0 transition-colors"
-                              style={{
-                                fontSize: 'var(--text-xs)',
-                                letterSpacing: '0.06em',
-                                color: 'var(--color-accent)',
-                              }}
-                            >
-                              <Check size={11} />
-                              <span>Valider</span>
-                            </button>
+                          {(isEditing || hasDraft(field.id)) && (
+                            <div className="flex items-center gap-3 flex-shrink-0">
+                              <button
+                                onClick={() => handleCancelField(field.id)}
+                                className="font-mono uppercase flex items-center gap-1.5 py-1 transition-colors"
+                                style={{
+                                  fontSize: 'var(--text-xs)',
+                                  letterSpacing: '0.06em',
+                                  color: 'var(--color-text-tertiary)',
+                                }}
+                                onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--color-text)')}
+                                onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--color-text-tertiary)')}
+                              >
+                                <span>Annuler</span>
+                              </button>
+                              <button
+                                onClick={() => handleSaveField(field.id)}
+                                disabled={!hasDraft(field.id)}
+                                className="font-mono uppercase flex items-center gap-1.5 py-1 transition-colors"
+                                style={{
+                                  fontSize: 'var(--text-xs)',
+                                  letterSpacing: '0.06em',
+                                  color: hasDraft(field.id) ? 'var(--color-accent)' : 'var(--color-text-tertiary)',
+                                  cursor: hasDraft(field.id) ? 'pointer' : 'not-allowed',
+                                  opacity: hasDraft(field.id) ? 1 : 0.5,
+                                }}
+                              >
+                                <Check size={11} />
+                                <span>Sauvegarder</span>
+                              </button>
+                            </div>
                           )}
                         </div>
 
-                        {isFilled && !isEditing ? (
+                        {isFilled && !isEditing && !hasDraft(field.id) ? (
                           <div
                             onClick={() => setEditingField(field.id)}
                             className="cursor-pointer transition-colors"
@@ -895,7 +946,21 @@ export default function ProjectPage() {
                             {displayValue}
                           </div>
                         ) : (
-                          renderField(field)
+                          <>
+                            {renderField(field)}
+                            {hasDraft(field.id) && !isEditing && (
+                              <p
+                                className="font-mono uppercase mt-2"
+                                style={{
+                                  fontSize: 'var(--text-xs)',
+                                  letterSpacing: '0.08em',
+                                  color: 'var(--color-accent)',
+                                }}
+                              >
+                                ✱ Modifications non sauvegardées
+                              </p>
+                            )}
+                          </>
                         )}
                       </div>
                     );
