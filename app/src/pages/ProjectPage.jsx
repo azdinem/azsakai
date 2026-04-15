@@ -48,6 +48,9 @@ export default function ProjectPage() {
   const project = isLoading ? null : getProject(id);
 
   useEffect(() => {
+    // Ne pas mettre getProject dans les deps : sa référence change à chaque keystroke
+    // (updateProjectField → context re-render → new getProject function ref)
+    // et ça faisait refirer cet effet en boucle, réinstallant le skeleton 300ms à chaque frappe.
     setIsLoading(true);
     const timer = setTimeout(() => {
       const p = getProject(id);
@@ -58,7 +61,8 @@ export default function ProjectPage() {
       setIsLoading(false);
     }, 300);
     return () => clearTimeout(timer);
-  }, [id, getProject]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
 
   useEffect(() => {
     if (project) {
