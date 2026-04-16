@@ -26,11 +26,12 @@ import Toast from '../components/Toast';
 import { SkeletonSidebar, SkeletonStepContent } from '../components/Skeleton';
 import KeyboardShortcuts from '../components/KeyboardShortcuts';
 import { HelpTooltip } from '../components/Tooltip';
+import { downloadBriefMarkdown, downloadBriefPDF, getCompletionStats } from '../lib/exportBrief';
 
 export default function ProjectPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { getProject, updateProject, updateProjectField, toggleChecklistItem, exportProjectMarkdown } = useData();
+  const { getProject, updateProject, updateProjectField, toggleChecklistItem } = useData();
 
   const [isLoading, setIsLoading] = useState(true);
   const [activePhase, setActivePhase] = useState('phase0');
@@ -45,6 +46,7 @@ export default function ProjectPage() {
   const [checklistOpen, setChecklistOpen] = useState(false);
   // Drafts locaux par fieldId — la saisie reste en mémoire locale jusqu'au clic sur "Sauvegarder"
   const [drafts, setDrafts] = useState({});
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
 
   // Dériver le projet directement du context à chaque render (évite le décalage state local / context qui faisait perdre le focus aux inputs)
   const project = isLoading ? null : getProject(id);
@@ -214,6 +216,26 @@ export default function ProjectPage() {
       return next;
     });
     setEditingField(null);
+  };
+
+  const handleExportMarkdown = () => {
+    if (!project) return;
+    downloadBriefMarkdown(project);
+    setToast({ message: 'Brief Markdown téléchargé', type: 'success' });
+  };
+
+  const handleExportPDF = async () => {
+    if (!project || isGeneratingPdf) return;
+    setIsGeneratingPdf(true);
+    try {
+      await downloadBriefPDF(project);
+      setToast({ message: 'Brief PDF téléchargé', type: 'success' });
+    } catch (err) {
+      console.error('Erreur génération PDF:', err);
+      setToast({ message: 'Erreur lors de la génération du PDF', type: 'error' });
+    } finally {
+      setIsGeneratingPdf(false);
+    }
   };
 
   const handleCheckToggle = (checkId) => {
@@ -612,7 +634,7 @@ export default function ProjectPage() {
           <kbd>R</kbd>
         </button>
         <button
-          onClick={() => exportProjectMarkdown(id)}
+          onClick={handleExportMarkdown}
           className="w-full flex items-center justify-between font-mono uppercase py-2 transition-colors"
           style={{
             fontSize: 'var(--text-xs)',
@@ -622,7 +644,24 @@ export default function ProjectPage() {
           onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--color-accent)')}
           onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--color-text)')}
         >
-          <span>Exporter</span>
+          <span>Export Markdown</span>
+          <Download size={12} />
+        </button>
+        <button
+          onClick={handleExportPDF}
+          disabled={isGeneratingPdf}
+          className="w-full flex items-center justify-between font-mono uppercase py-2 transition-colors"
+          style={{
+            fontSize: 'var(--text-xs)',
+            letterSpacing: '0.08em',
+            color: 'var(--color-text)',
+            opacity: isGeneratingPdf ? 0.5 : 1,
+            cursor: isGeneratingPdf ? 'wait' : 'pointer',
+          }}
+          onMouseEnter={(e) => { if (!isGeneratingPdf) e.currentTarget.style.color = 'var(--color-accent)'; }}
+          onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--color-text)')}
+        >
+          <span>{isGeneratingPdf ? 'Génération…' : 'Export PDF'}</span>
           <Download size={12} />
         </button>
         <button
@@ -1157,6 +1196,161 @@ export default function ProjectPage() {
                 </span>
               )}
             </nav>
+
+            {!nextStep && (() => {
+              const stats = getCompletionStats(project);
+              return (
+                <section
+                  className="mt-16 editorial-reveal"
+                  style={{
+                    borderTop: '2px solid var(--color-accent)',
+                    paddingTop: '2.5rem',
+                  }}
+                >
+                  <div className="flex items-baseline justify-between mb-6">
+                    <span
+                      className="font-mono uppercase"
+                      style={{
+                        fontSize: 'var(--text-xs)',
+                        letterSpacing: '0.1em',
+                        color: 'var(--color-accent)',
+                      }}
+                    >
+                      ★ Parcours terminé
+                    </span>
+                    <span className="section-index">Z.01</span>
+                  </div>
+
+                  <h2
+                    className="font-display"
+                    style={{
+                      fontSize: 'clamp(2rem, 4.5vw, 3.5rem)',
+                      lineHeight: 0.95,
+                      letterSpacing: '-0.03em',
+                      marginBottom: '1rem',
+                    }}
+                  >
+                    Méthode<br />terminée.
+                  </h2>
+
+                  <p className="font-lead" style={{ maxWidth: '48ch' }}>
+                    Votre brief éditorial est prêt. Téléchargez-le au format que vous préférez pour le partager, l'archiver ou le copier ailleurs.
+                  </p>
+
+                  {/* Completion indicator */}
+                  <div
+                    className="grid grid-cols-3 gap-4 mt-10 mb-10"
+                    style={{
+                      borderTop: '1px solid var(--color-text)',
+                      borderBottom: '1px solid var(--color-text)',
+                      padding: '1.5rem 0',
+                    }}
+                  >
+                    <div>
+                      <p
+                        className="font-mono uppercase mb-2"
+                        style={{
+                          fontSize: 'var(--text-xs)',
+                          letterSpacing: '0.1em',
+                          color: 'var(--color-text-tertiary)',
+                        }}
+                      >
+                        Champs
+                      </p>
+                      <p
+                        className="num-display"
+                        style={{
+                          fontSize: 'clamp(1.75rem, 4vw, 2.5rem)',
+                          color: 'var(--color-text)',
+                        }}
+                      >
+                        {stats.filledFields}<span style={{ color: 'var(--color-text-tertiary)', fontSize: '0.6em' }}> / {stats.totalFields}</span>
+                      </p>
+                    </div>
+                    <div>
+                      <p
+                        className="font-mono uppercase mb-2"
+                        style={{
+                          fontSize: 'var(--text-xs)',
+                          letterSpacing: '0.1em',
+                          color: 'var(--color-text-tertiary)',
+                        }}
+                      >
+                        Étapes
+                      </p>
+                      <p
+                        className="num-display"
+                        style={{
+                          fontSize: 'clamp(1.75rem, 4vw, 2.5rem)',
+                          color: 'var(--color-text)',
+                        }}
+                      >
+                        {stats.completedSteps}<span style={{ color: 'var(--color-text-tertiary)', fontSize: '0.6em' }}> / {stats.totalSteps}</span>
+                      </p>
+                    </div>
+                    <div>
+                      <p
+                        className="font-mono uppercase mb-2"
+                        style={{
+                          fontSize: 'var(--text-xs)',
+                          letterSpacing: '0.1em',
+                          color: 'var(--color-text-tertiary)',
+                        }}
+                      >
+                        Avancement
+                      </p>
+                      <p
+                        className="num-display"
+                        style={{
+                          fontSize: 'clamp(1.75rem, 4vw, 2.5rem)',
+                          color: stats.progress === 100 ? 'var(--color-accent)' : 'var(--color-text)',
+                        }}
+                      >
+                        {stats.progress}%
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* CTA buttons */}
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <button
+                      onClick={handleExportMarkdown}
+                      className="btn-primary flex items-center justify-center gap-2"
+                      style={{ padding: '1rem 1.75rem' }}
+                    >
+                      <Download size={14} />
+                      <span>Télécharger en Markdown</span>
+                    </button>
+                    <button
+                      onClick={handleExportPDF}
+                      disabled={isGeneratingPdf}
+                      className="btn-secondary flex items-center justify-center gap-2"
+                      style={{
+                        padding: '1rem 1.75rem',
+                        opacity: isGeneratingPdf ? 0.5 : 1,
+                        cursor: isGeneratingPdf ? 'wait' : 'pointer',
+                      }}
+                    >
+                      <Download size={14} />
+                      <span>{isGeneratingPdf ? 'Génération…' : 'Télécharger en PDF'}</span>
+                    </button>
+                  </div>
+
+                  {stats.progress < 100 && (
+                    <p
+                      className="font-mono uppercase mt-6"
+                      style={{
+                        fontSize: 'var(--text-xs)',
+                        letterSpacing: '0.08em',
+                        color: 'var(--color-text-tertiary)',
+                      }}
+                    >
+                      Le brief intègre uniquement les champs renseignés. Vous pouvez revenir compléter et re-exporter à tout moment.
+                    </p>
+                  )}
+                </section>
+              );
+            })()}
           </div>
         )}
       </main>
@@ -1292,16 +1486,31 @@ export default function ProjectPage() {
               )}
             </div>
 
-            <div className="px-8 py-6" style={{ borderTop: '1px solid var(--color-text)' }}>
+            <div className="px-8 py-6 flex flex-col sm:flex-row gap-3" style={{ borderTop: '1px solid var(--color-text)' }}>
               <button
                 onClick={() => {
-                  exportProjectMarkdown(id);
+                  handleExportMarkdown();
                   setShowSummary(false);
                 }}
-                className="btn-primary w-full flex items-center justify-center gap-2"
+                className="btn-primary flex-1 flex items-center justify-center gap-2"
               >
                 <Download size={14} />
-                <span>Exporter en Markdown</span>
+                <span>Markdown</span>
+              </button>
+              <button
+                onClick={async () => {
+                  await handleExportPDF();
+                  setShowSummary(false);
+                }}
+                disabled={isGeneratingPdf}
+                className="btn-secondary flex-1 flex items-center justify-center gap-2"
+                style={{
+                  opacity: isGeneratingPdf ? 0.5 : 1,
+                  cursor: isGeneratingPdf ? 'wait' : 'pointer',
+                }}
+              >
+                <Download size={14} />
+                <span>{isGeneratingPdf ? 'Génération…' : 'PDF'}</span>
               </button>
             </div>
           </div>
