@@ -62,6 +62,59 @@ export const PHASE_COLORS = {
   phase8: { main: '#64748b', light: '#f8fafc', dark: '#475569' },
 };
 
+export const STEP_2_2_VARIANTS = {
+  pas: {
+    title: 'Construire le plan selon le framework PAS',
+    objective: 'Structurer le contenu autour du triptyque Problème-Agitation-Solution.',
+    checklist: [
+      { id: 'c2_2_1', label: 'Lister tous les sous-sujets à couvrir' },
+      { id: 'c2_2_2', label: 'Section « Problème » : le lecteur se reconnaît dans la douleur décrite' },
+      { id: 'c2_2_3', label: 'Section « Agitation » : les conséquences de l\'inaction sont claires' },
+      { id: 'c2_2_4', label: 'Section « Solution » : la réponse est concrète, étayée et actionnable' },
+    ],
+  },
+  aida: {
+    title: 'Construire le plan selon le framework AIDA',
+    objective: 'Structurer le contenu pour capter l\'attention puis guider vers l\'action.',
+    checklist: [
+      { id: 'c2_2_1', label: 'Lister tous les sous-sujets à couvrir' },
+      { id: 'c2_2_2', label: 'Section « Attention » : accroche forte identifiée' },
+      { id: 'c2_2_3', label: 'Section « Intérêt/Désir » : bénéfices concrets mis en avant' },
+      { id: 'c2_2_4', label: 'Section « Action » : CTA clair et motivant' },
+    ],
+  },
+  mece: {
+    title: 'Construire le plan selon le framework MECE',
+    objective: 'Créer une structure exhaustive sans chevauchements.',
+    checklist: [
+      { id: 'c2_2_1', label: 'Lister tous les sous-sujets à couvrir' },
+      { id: 'c2_2_2', label: 'Vérifier que chaque section traite un aspect unique (Mutuellement Exclusif)' },
+      { id: 'c2_2_3', label: 'Vérifier que l\'ensemble couvre 100% du sujet (Collectivement Exhaustif)' },
+      { id: 'c2_2_4', label: 'Organiser les sections dans un ordre logique' },
+    ],
+  },
+  pyramide: {
+    title: 'Construire le plan selon la Pyramide inversée',
+    objective: 'Placer l\'information essentielle en premier, les détails ensuite.',
+    checklist: [
+      { id: 'c2_2_1', label: 'Lister tous les sous-sujets à couvrir' },
+      { id: 'c2_2_2', label: 'L\'information la plus importante est dans le premier tiers' },
+      { id: 'c2_2_3', label: 'Chaque section approfondit sans répéter' },
+      { id: 'c2_2_4', label: 'Le lecteur peut arrêter sa lecture à tout moment et avoir l\'essentiel' },
+    ],
+  },
+  default: {
+    title: 'Construire le plan de contenu',
+    objective: 'Organiser les sections dans une structure logique et complète.',
+    checklist: [
+      { id: 'c2_2_1', label: 'Lister tous les sous-sujets à couvrir' },
+      { id: 'c2_2_2', label: 'Vérifier la cohérence et l\'exhaustivité du plan' },
+      { id: 'c2_2_3', label: 'Vérifier l\'absence de chevauchements entre sections' },
+      { id: 'c2_2_4', label: 'Organiser les sections dans un ordre logique' },
+    ],
+  },
+};
+
 // Mapping checklist -> champs pour auto-complétion
 export const FIELD_TO_CHECKLIST_MAP = {
   // Phase 0
@@ -133,18 +186,18 @@ export const PHASES = [
           { id: 'c0_1_4', label: 'Deadline de publication fixée' },
         ],
         fields: [
-          { id: 'main_keyword', type: 'text', label: 'Mot-clé principal', placeholder: 'Ex: création de contenu SEO' },
-          { id: 'secondary_keywords', type: 'textarea', label: 'Mots-clés secondaires', placeholder: 'Un mot-clé par ligne', rows: 3 },
-          { id: 'search_volume', type: 'text', label: 'Volume de recherche mensuel', placeholder: 'Ex: 1 200' },
-          { id: 'business_objective', type: 'select', label: 'Objectif business', options: [
+          { id: 'main_keyword', type: 'text', label: 'Mot-clé principal', placeholder: 'Ex: création de contenu SEO', help: 'Le terme exact que tapent vos prospects dans Google. Choisissez un mot-clé avec un volume suffisant et une intention claire.' },
+          { id: 'secondary_keywords', type: 'textarea', label: 'Mots-clés secondaires', placeholder: 'Un mot-clé par ligne', rows: 3, help: 'Variantes et synonymes du mot-clé principal. Ils permettent de couvrir les reformulations et d\'élargir la portée sémantique.' },
+          { id: 'search_volume', type: 'text', label: 'Volume de recherche mensuel', placeholder: 'Ex: 1 200', help: 'Nombre de recherches mensuelles (via Ahrefs, SEMrush, Ubersuggest). Indique le potentiel de trafic du mot-clé.' },
+          { id: 'business_objective', type: 'select', label: 'Objectif business', help: 'Oriente le ton, la profondeur et le CTA du contenu. Un article pour le trafic ne se rédige pas comme un article pour la conversion.', options: [
             { id: 'traffic', label: 'Générer du trafic qualifié' },
             { id: 'leads', label: 'Générer des leads' },
             { id: 'sales', label: 'Générer des ventes' },
             { id: 'awareness', label: 'Développer la notoriété' },
             { id: 'authority', label: 'Établir l\'expertise / autorité' },
           ]},
-          { id: 'deadline', type: 'date', label: 'Deadline de publication' },
-          { id: 'notes', type: 'textarea', label: 'Notes complémentaires', rows: 3 },
+          { id: 'deadline', type: 'date', label: 'Deadline de publication', help: 'Fixe le rythme de travail et aide à prioriser les étapes. Prévoir au moins 3 jours pour un article long.' },
+          { id: 'notes', type: 'textarea', label: 'Notes complémentaires', rows: 3, help: 'Contraintes particulières, briefing client, éléments de contexte à garder en tête pendant la rédaction.' },
         ],
       },
     ],
@@ -170,14 +223,14 @@ export const PHASES = [
           { id: 'c1_1_4', label: 'Définir le CTA principal prévu' },
         ],
         fields: [
-          { id: 'reader_profile', type: 'select', label: 'Profil sélectionné', options: 'READER_PROFILES' },
-          { id: 'knowledge_level', type: 'select', label: 'Niveau de connaissance', options: [
+          { id: 'reader_profile', type: 'select', label: 'Profil sélectionné', options: 'READER_PROFILES', help: 'Détermine le ton, le niveau de détail et le CTA. Un explorateur a besoin de pédagogie, un décisionnaire veut du concret.' },
+          { id: 'knowledge_level', type: 'select', label: 'Niveau de connaissance', help: 'Un débutant a besoin de définitions et d\'exemples. Un expert veut des données avancées et des nuances.', options: [
             { id: 'beginner', label: 'Débutant' },
             { id: 'intermediate', label: 'Intermédiaire' },
             { id: 'expert', label: 'Expert' },
           ]},
-          { id: 'main_question', type: 'textarea', label: 'Question principale à laquelle répondre' },
-          { id: 'main_cta', type: 'text', label: 'CTA principal prévu' },
+          { id: 'main_question', type: 'textarea', label: 'Question principale à laquelle répondre', help: 'La question centrale de votre lecteur. Votre contenu entier doit y répondre clairement — c\'est votre fil conducteur.' },
+          { id: 'main_cta', type: 'text', label: 'CTA principal prévu', help: 'L\'action que vous voulez que le lecteur fasse après avoir lu. Doit être cohérent avec le profil lecteur choisi.' },
         ],
       },
       {
@@ -193,10 +246,9 @@ export const PHASES = [
           { id: 'c1_2_4', label: 'Identifier le format dominant' },
         ],
         fields: [
-          { id: 'serp_elements', type: 'multicheck', label: 'Éléments enrichis présents', options: 'SERP_ELEMENTS' },
-          { id: 'serp_analysis', type: 'table', label: 'Analyse des 5 premiers résultats', columns: ['Position', 'Type de contenu', 'Longueur estimée', 'Format dominant', 'Angle principal'] },
-          { id: 'dominant_format', type: 'select', label: 'Format dominant identifié', options: 'CONTENT_FORMATS' },
-          { id: 'paa_questions', type: 'textarea', label: 'Questions PAA relevées (4-6 premières)' },
+          { id: 'serp_elements', type: 'multicheck', label: 'Éléments enrichis présents', options: 'SERP_ELEMENTS', help: 'Recherchez votre mot-clé en navigation privée et cochez les éléments visibles. Ils révèlent ce que Google valorise pour cette requête.' },
+          { id: 'serp_analysis', type: 'table', label: 'Analyse des 5 premiers résultats', columns: ['Position', 'Type de contenu', 'Longueur estimée', 'Format dominant', 'Angle principal'], help: 'Analysez les 5 premiers résultats organiques. Leur format et angle vous montrent le « cahier des charges » implicite de Google.' },
+          { id: 'dominant_format', type: 'select', label: 'Format dominant identifié', options: 'CONTENT_FORMATS', help: 'Le format que Google privilégie pour cette requête. Votre contenu devrait adopter ce format ou le surpasser.' },
         ],
       },
       {
@@ -211,8 +263,8 @@ export const PHASES = [
           { id: 'c1_3_3', label: 'Justifier le choix' },
         ],
         fields: [
-          { id: 'framework', type: 'select', label: 'Framework choisi', options: 'FRAMEWORKS' },
-          { id: 'framework_justification', type: 'textarea', label: 'Justification du choix' },
+          { id: 'framework', type: 'select', label: 'Framework choisi', options: 'FRAMEWORKS', help: 'Le framework structure votre plan. MECE pour les guides exhaustifs, PAS pour les articles orientés problème, AIDA pour la conversion.' },
+          { id: 'framework_justification', type: 'textarea', label: 'Justification du choix', help: 'Expliquez pourquoi ce framework est adapté à votre mot-clé, votre audience et l\'intention de recherche identifiée.' },
         ],
       },
     ],
@@ -238,7 +290,7 @@ export const PHASES = [
           { id: 'c2_1_4', label: 'Prioriser les questions (1-3)' },
         ],
         fields: [
-          { id: 'paa_list', type: 'paa_table', label: 'Questions PAA collectées', columns: ['Question PAA', 'Type de réponse', 'Priorité (1-3)', 'Section prévue'] },
+          { id: 'paa_list', type: 'paa_table', label: 'Questions PAA collectées', columns: ['Question PAA', 'Type de réponse', 'Priorité (1-3)', 'Section prévue'], help: 'Cliquez sur les questions PAA dans Google pour en révéler de nouvelles. Classez-les par priorité pour structurer vos H2/H3.' },
         ],
       },
       {
@@ -254,8 +306,8 @@ export const PHASES = [
           { id: 'c2_2_4', label: 'Organiser les sections dans un ordre logique' },
         ],
         fields: [
-          { id: 'content_plan', type: 'textarea', label: 'Plan structuré (H1, H2, H3)', placeholder: '# Titre H1\n\n## H2 : Section 1\n### H3 : Sous-section\n\n## H2 : Section 2\n...', rows: 12 },
-          { id: 'plan_order', type: 'select', label: 'Type d\'organisation', options: [
+          { id: 'content_plan', type: 'textarea', label: 'Plan structuré (H1, H2, H3)', placeholder: '# Titre H1\n\n## H2 : Section 1\n### H3 : Sous-section\n\n## H2 : Section 2\n...', rows: 12, help: 'Rédigez votre plan en Markdown (# H1, ## H2, ### H3). Chaque H2 doit traiter un aspect distinct du sujet.' },
+          { id: 'plan_order', type: 'select', label: 'Type d\'organisation', help: 'L\'ordre dans lequel les sections s\'enchaînent. Choisissez selon la logique la plus naturelle pour le lecteur.', options: [
             { id: 'general_particular', label: 'Du général au particulier' },
             { id: 'chronological', label: 'Chronologique' },
             { id: 'complexity', label: 'Par niveau de complexité' },
@@ -277,8 +329,8 @@ export const PHASES = [
           { id: 'c2_3_6', label: 'Comparaison effectuée avec les titres des concurrents' },
         ],
         fields: [
-          { id: 'competitor_terms', type: 'textarea', label: 'Termes présents chez les concurrents mais absents de votre plan' },
-          { id: 'unique_terms', type: 'textarea', label: 'Termes uniques à votre plan (différenciation)' },
+          { id: 'competitor_terms', type: 'textarea', label: 'Termes présents chez les concurrents mais absents de votre plan', help: 'Repérez les termes et sujets que les top 5 couvrent et que vous avez oubliés. Combler ces lacunes est prioritaire.' },
+          { id: 'unique_terms', type: 'textarea', label: 'Termes uniques à votre plan (différenciation)', help: 'Ce que vous apportez et que les concurrents n\'ont pas. C\'est votre avantage pour le critère Information Gain de Google.' },
         ],
       },
       {
@@ -293,7 +345,7 @@ export const PHASES = [
           { id: 'c2_4_3', label: 'Le contenu apporte des informations introuvables ailleurs' },
         ],
         fields: [
-          { id: 'info_gain_sources', type: 'info_gain_table', label: 'Sources de valeur unique', options: 'INFO_GAIN_SOURCES' },
+          { id: 'info_gain_sources', type: 'info_gain_table', label: 'Sources de valeur unique', options: 'INFO_GAIN_SOURCES', help: 'Identifiez au moins 3 éléments uniques : données propriétaires, retour d\'expérience, études de cas, expertise terrain, interviews.' },
         ],
       },
     ],
@@ -320,10 +372,10 @@ export const PHASES = [
           { id: 'c3_1_5', label: 'Termes à utiliser/éviter listés' },
         ],
         fields: [
-          { id: 'brand_mission', type: 'textarea', label: 'Mission de la marque' },
-          { id: 'brand_values', type: 'textarea', label: 'Valeurs principales' },
-          { id: 'main_problem', type: 'textarea', label: 'Problème principal résolu pour les clients' },
-          { id: 'tone_of_voice', type: 'select', label: 'Tone of voice', options: [
+          { id: 'brand_mission', type: 'textarea', label: 'Mission de la marque', help: 'En une phrase : pourquoi votre entreprise existe et ce qu\'elle apporte. Guide le « pour qui » et le « pourquoi » de chaque contenu.' },
+          { id: 'brand_values', type: 'textarea', label: 'Valeurs principales', help: 'Les 3-5 valeurs qui guident votre communication. Elles influencent le choix des mots, des exemples et du ton.' },
+          { id: 'main_problem', type: 'textarea', label: 'Problème principal résolu pour les clients', help: 'Le problème concret que votre produit/service résout. Le contenu doit montrer que vous comprenez cette douleur.' },
+          { id: 'tone_of_voice', type: 'select', label: 'Tone of voice', help: 'Le ton doit être cohérent avec votre marque et adapté au profil lecteur défini en phase 1.', options: [
             { id: 'formal', label: 'Formel' },
             { id: 'conversational', label: 'Conversationnel' },
             { id: 'expert', label: 'Expert' },
@@ -333,8 +385,8 @@ export const PHASES = [
             { id: 'vous', label: 'Vouvoiement' },
             { id: 'tu', label: 'Tutoiement' },
           ]},
-          { id: 'terms_to_use', type: 'textarea', label: 'Termes à privilégier' },
-          { id: 'terms_to_avoid', type: 'textarea', label: 'Termes à éviter' },
+          { id: 'terms_to_use', type: 'textarea', label: 'Termes à privilégier', help: 'Vocabulaire propre à votre marque, termes techniques maîtrisés par votre audience, mots-clés sémantiques importants.' },
+          { id: 'terms_to_avoid', type: 'textarea', label: 'Termes à éviter', help: 'Jargon concurrent, termes connotés négativement, vocabulaire trop technique pour votre audience cible.' },
         ],
       },
       {
@@ -350,7 +402,7 @@ export const PHASES = [
           { id: 'c3_2_4', label: 'Plan d\'intégration naturelle défini' },
         ],
         fields: [
-          { id: 'qbst_terms', type: 'textarea', label: 'Termes saillants à intégrer', placeholder: 'Synonymes: ...\nTermes associés: ...\nEntités liées: ...', rows: 6 },
+          { id: 'qbst_terms', type: 'textarea', label: 'Termes saillants à intégrer', placeholder: 'Synonymes: ...\nTermes associés: ...\nEntités liées: ...', rows: 6, help: 'Listez synonymes, cooccurrences et entités nommées liées au sujet. Utilisez un outil comme 1.fr, YourTextGuru ou SEMrush pour les identifier.' },
         ],
       },
       {
@@ -365,7 +417,7 @@ export const PHASES = [
           { id: 'c3_3_3', label: 'Ordre de rédaction des sections défini' },
         ],
         fields: [
-          { id: 'target_length', type: 'select', label: 'Longueur cible', options: [
+          { id: 'target_length', type: 'select', label: 'Longueur cible', help: 'Basez-vous sur la longueur moyenne des top 5 SERP. Un contenu court se rédige d\'un trait, un long se rédige section par section.', options: [
             { id: 'short', label: 'Court (<1200 mots) - Rédaction one shot' },
             { id: 'long', label: 'Long (>1200 mots) - Rédaction section par section' },
           ]},
@@ -400,7 +452,7 @@ export const PHASES = [
           { id: 'c4_1_9', label: 'Termes saillants intégrés naturellement' },
         ],
         fields: [
-          { id: 'body_content', type: 'textarea', label: 'Corps du contenu', rows: 20 },
+          { id: 'body_content', type: 'textarea', label: 'Corps du contenu', rows: 20, help: 'Rédigez section par section. Phrases courtes (10-20 mots), voix active, et intégrez naturellement les termes saillants de la phase 3.' },
         ],
       },
       {
@@ -416,7 +468,7 @@ export const PHASES = [
           { id: 'c4_2_4', label: 'Mot-clé principal dans les 100 premiers mots' },
         ],
         fields: [
-          { id: 'introduction', type: 'textarea', label: 'Introduction', rows: 6, placeholder: '[Accroche : problème ou question que se pose le lecteur]\n\n[Contexte : pourquoi c\'est important maintenant]\n\nDans ce guide, vous découvrirez [promesse 1], [promesse 2] et [promesse 3].' },
+          { id: 'introduction', type: 'textarea', label: 'Introduction', rows: 6, placeholder: '[Accroche : problème ou question que se pose le lecteur]\n\n[Contexte : pourquoi c\'est important maintenant]\n\nDans ce guide, vous découvrirez [promesse 1], [promesse 2] et [promesse 3].', help: 'Rédigez l\'introduction EN DERNIER. Placez le mot-clé dans les 100 premiers mots. Structure : accroche → contexte → promesse.' },
         ],
       },
       {
@@ -431,7 +483,7 @@ export const PHASES = [
           { id: 'c4_3_3', label: 'CTA adapté au profil lecteur' },
         ],
         fields: [
-          { id: 'conclusion', type: 'textarea', label: 'Conclusion', rows: 6, placeholder: '[Rappel des 2-3 enseignements principaux]\n\n[Prochaine étape recommandée pour le lecteur]\n\n[CTA clair et spécifique adapté au profil]' },
+          { id: 'conclusion', type: 'textarea', label: 'Conclusion', rows: 6, placeholder: '[Rappel des 2-3 enseignements principaux]\n\n[Prochaine étape recommandée pour le lecteur]\n\n[CTA clair et spécifique adapté au profil]', help: 'Synthétisez en 2-3 points clés, recommandez une prochaine étape et placez un CTA adapté au profil lecteur.' },
         ],
       },
       {
@@ -451,7 +503,7 @@ export const PHASES = [
             { id: 'list', label: 'Liste (5-8 items sous H2 "Comment..." ou "Les X étapes...")' },
             { id: 'table', label: 'Tableau (comparatif sous H2 "Comparaison..." ou "Différences...")' },
           ]},
-          { id: 'snippet_content', type: 'textarea', label: 'Contenu optimisé pour le snippet', rows: 6 },
+          { id: 'snippet_content', type: 'textarea', label: 'Contenu optimisé pour le snippet', rows: 6, help: 'Pour un paragraphe : 40-60 mots de définition claire. Pour une liste : 5-8 items. Placez-le dans le premier tiers de l\'article.' },
         ],
       },
     ],
@@ -479,7 +531,7 @@ export const PHASES = [
           { id: 'c5_1_6', label: 'Images compressées (<100Ko si possible)' },
         ],
         fields: [
-          { id: 'visuals_list', type: 'textarea', label: 'Liste des visuels à intégrer', placeholder: '1. [Section] - Type de visuel - Description - Alt text prévu\n2. ...', rows: 6 },
+          { id: 'visuals_list', type: 'textarea', label: 'Liste des visuels à intégrer', placeholder: '1. [Section] - Type de visuel - Description - Alt text prévu\n2. ...', rows: 6, help: 'Prévoyez 1 visuel tous les 300-500 mots. Chaque image doit avoir un nom de fichier descriptif et un alt text avec mot-clé.' },
         ],
       },
       {
@@ -577,8 +629,8 @@ export const PHASES = [
           { id: 'c7_1_5', label: 'Pages existantes à mettre à jour identifiées' },
         ],
         fields: [
-          { id: 'internal_links', type: 'textarea', label: 'Liens internes prévus', placeholder: 'Terme/Concept | Page cible | Ancre prévue\n...', rows: 6 },
-          { id: 'pages_to_update', type: 'textarea', label: 'Pages existantes à mettre à jour', rows: 4 },
+          { id: 'internal_links', type: 'textarea', label: 'Liens internes prévus', placeholder: 'Terme/Concept | Page cible | Ancre prévue\n...', rows: 6, help: 'Minimum 2-3 liens internes. Utilisez des ancres descriptives (pas de « cliquez ici »). Privilégiez les pages thématiquement proches.' },
+          { id: 'pages_to_update', type: 'textarea', label: 'Pages existantes à mettre à jour', rows: 4, help: 'Listez les pages existantes qui devraient pointer vers ce nouveau contenu. Mettez-les à jour après publication.' },
         ],
       },
       {
@@ -594,7 +646,7 @@ export const PHASES = [
           { id: 'c7_2_4', label: 'Toutes les pages cibles sont toujours en ligne et à jour' },
         ],
         fields: [
-          { id: 'external_links', type: 'textarea', label: 'Liens externes utilisés', placeholder: 'URL | Source fiable? | Nouvel onglet? | Pertinence\n...', rows: 6 },
+          { id: 'external_links', type: 'textarea', label: 'Liens externes utilisés', placeholder: 'URL | Source fiable? | Nouvel onglet? | Pertinence\n...', rows: 6, help: 'Citez des sources fiables (études, institutions, médias reconnus). Évitez les concurrents directs sauf dans un comparatif.' },
         ],
       },
     ],
@@ -625,10 +677,10 @@ export const PHASES = [
           { id: 'c8_1_9', label: 'Auteur identifié (si applicable)' },
         ],
         fields: [
-          { id: 'h1_title', type: 'text', label: 'Titre H1' },
-          { id: 'meta_title', type: 'text', label: 'Meta title (50-60 car.)', maxLength: 60 },
-          { id: 'meta_description', type: 'textarea', label: 'Meta description (150-160 car.)', maxLength: 160, rows: 2 },
-          { id: 'target_url', type: 'text', label: 'URL de publication' },
+          { id: 'h1_title', type: 'text', label: 'Titre H1', help: 'Unique sur la page, contient le mot-clé principal. Doit donner envie de lire et résumer la promesse du contenu.' },
+          { id: 'meta_title', type: 'text', label: 'Meta title (50-60 car.)', maxLength: 60, help: '50-60 caractères max. Mot-clé en début de titre. Apparaît dans l\'onglet navigateur et les résultats Google.' },
+          { id: 'meta_description', type: 'textarea', label: 'Meta description (150-160 car.)', maxLength: 160, rows: 2, help: '150-160 caractères. Résumez la valeur de la page et ajoutez un appel à l\'action. Texte affiché sous le titre dans Google.' },
+          { id: 'target_url', type: 'text', label: 'URL de publication', help: 'URL courte et descriptive avec le mot-clé principal. Évitez les mots vides (le, de, et). Ex: /creation-contenu-seo' },
           { id: 'author', type: 'text', label: 'Auteur' },
           { id: 'publication_date', type: 'date', label: 'Date de publication' },
         ],
@@ -651,8 +703,8 @@ export const PHASES = [
             { id: 'engagement', label: 'Engagement' },
             { id: 'conversion', label: 'Conversion' },
           ]},
-          { id: 'kpis', type: 'textarea', label: 'KPIs à suivre', placeholder: 'Position moyenne: ...\nImpressions: ...\nSessions: ...\nTaux de conversion: ...', rows: 6 },
-          { id: 'smart_objective', type: 'textarea', label: 'Objectif SMART', placeholder: 'Spécifique: ...\nMesurable: ...\nAtteignable: ...\nRéaliste: ...\nTemporel: ...', rows: 6 },
+          { id: 'kpis', type: 'textarea', label: 'KPIs à suivre', placeholder: 'Position moyenne: ...\nImpressions: ...\nSessions: ...\nTaux de conversion: ...', rows: 6, help: 'Choisissez 3-5 KPIs alignés avec votre objectif. Planifiez des points de contrôle à J+7, J+30 et J+90.' },
+          { id: 'smart_objective', type: 'textarea', label: 'Objectif SMART', placeholder: 'Spécifique: ...\nMesurable: ...\nAtteignable: ...\nRéaliste: ...\nTemporel: ...', rows: 6, help: 'Ex: « Atteindre le top 10 sur [mot-clé] dans les 90 jours avec 500 sessions/mois ». Doit être mesurable et daté.' },
         ],
       },
     ],

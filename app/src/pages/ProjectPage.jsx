@@ -1,9 +1,10 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useData } from '../contexts/DataContext';
 import {
   PHASES,
   FIELD_TO_CHECKLIST_MAP,
+  STEP_2_2_VARIANTS,
   READER_PROFILES,
   FRAMEWORKS,
   SERP_ELEMENTS,
@@ -46,6 +47,9 @@ export default function ProjectPage() {
   const [checklistOpen, setChecklistOpen] = useState(false);
   // Drafts locaux par fieldId — la saisie reste en mémoire locale jusqu'au clic sur "Sauvegarder"
   const [drafts, setDrafts] = useState({});
+  const draftsRef = useRef(drafts);
+  useEffect(() => { draftsRef.current = drafts; }, [drafts]);
+  const autoSaveTimerRef = useRef(null);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
 
   // Dériver le projet directement du context à chaque render (évite le décalage state local / context qui faisait perdre le focus aux inputs)
@@ -133,6 +137,29 @@ export default function ProjectPage() {
     setToast({ message: 'Sauvegardé', type: 'success' });
   }, []);
 
+  const handleSilentSave = useCallback((fieldId) => {
+    const draftValue = draftsRef.current[fieldId];
+    if (draftValue === undefined) return;
+    updateProjectField(id, fieldId, draftValue);
+    setDrafts(prev => {
+      const next = { ...prev };
+      delete next[fieldId];
+      return next;
+    });
+    const checklistId = FIELD_TO_CHECKLIST_MAP[fieldId];
+    const hasContent = typeof draftValue === 'string'
+      ? draftValue.trim().length > 0
+      : Array.isArray(draftValue) ? draftValue.length > 0 : Boolean(draftValue);
+    if (checklistId && hasContent) {
+      toggleChecklistItem(id, checklistId);
+    }
+    setToast({ message: 'Auto-sauvegardé', type: 'success' });
+  }, [id, updateProjectField, toggleChecklistItem]);
+
+  useEffect(() => {
+    return () => { if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current); };
+  }, []);
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex" style={{ backgroundColor: 'var(--color-bg)' }}>
@@ -159,7 +186,14 @@ export default function ProjectPage() {
   }
 
   const currentPhase = PHASES.find(p => p.id === activePhase);
-  const currentStep = currentPhase?.steps.find(s => s.id === activeStep);
+  const rawStep = currentPhase?.steps.find(s => s.id === activeStep);
+  const currentStep = rawStep?.id === 'step2_2'
+    ? (() => {
+        const fw = project?.fields?.framework;
+        const variant = STEP_2_2_VARIANTS[fw] || STEP_2_2_VARIANTS.default;
+        return { ...rawStep, title: variant.title, objective: variant.objective, checklist: variant.checklist };
+      })()
+    : rawStep;
   const overallProgress = calculateProgress(project);
 
   const handlePhaseChange = (phaseId) => {
@@ -177,17 +211,18 @@ export default function ProjectPage() {
   };
 
   const handleFieldChange = (fieldId, value) => {
-    // Ne met à jour que le draft local — la persistance a lieu uniquement au clic sur "Sauvegarder"
     setDrafts(prev => ({ ...prev, [fieldId]: value }));
     setEditingField(fieldId);
+    if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
+    autoSaveTimerRef.current = setTimeout(() => handleSilentSave(fieldId), 30000);
   };
 
   const hasDraft = (fieldId) => drafts[fieldId] !== undefined;
 
   const handleSaveField = (fieldId) => {
+    if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
     const draftValue = drafts[fieldId];
     if (draftValue === undefined) {
-      // Rien à sauvegarder, juste fermer l'édition
       setEditingField(null);
       return;
     }
@@ -303,6 +338,7 @@ export default function ProjectPage() {
             type="text"
             value={value}
             onChange={(e) => handleFieldChange(field.id, e.target.value)}
+            onBlur={() => { if (drafts[field.id] !== undefined) handleSaveField(field.id); }}
             className="w-full"
             placeholder={field.placeholder}
             maxLength={field.maxLength}
@@ -313,17 +349,80 @@ export default function ProjectPage() {
           <textarea
             value={value}
             onChange={(e) => handleFieldChange(field.id, e.target.value)}
+            onBlur={() => { if (drafts[field.id] !== undefined) handleSaveField(field.id); }}
             className="w-full resize-y"
             placeholder={field.placeholder}
             rows={field.rows || 4}
             maxLength={field.maxLength}
           />
         );
-      case 'select':
+      case 'select': {
+        const isRichSelect = field.options === 'READER_PROFILES';
+        if (isRichSelect) {
+          return (
+            <div style={{ border: '1px solid var(--color-text)' }}>
+              {options.map((opt, i) => {
+                const isSelected = value === opt.id;
+                return (
+                  <label
+                    key={opt.id}
+                    className="flex items-start gap-3 cursor-pointer p-4 transition-colors"
+                    style={{
+                      borderTop: i > 0 ? '1px solid var(--color-text)' : 'none',
+                      backgroundColor: isSelected ? 'var(--color-bg-secondary)' : 'transparent',
+                    }}
+                    onMouseEnter={(e) => !isSelected && (e.currentTarget.style.backgroundColor = 'var(--color-bg-hover)')}
+                    onMouseLeave={(e) => !isSelected && (e.currentTarget.style.backgroundColor = 'transparent')}
+                  >
+                    <input
+                      type="radio"
+                      name={field.id}
+                      value={opt.id}
+                      checked={isSelected}
+                      onChange={(e) => {
+                        updateProjectField(id, field.id, e.target.value);
+                        const checklistId = FIELD_TO_CHECKLIST_MAP[field.id];
+                        if (checklistId && !project.checklist?.[checklistId]) toggleChecklistItem(id, checklistId);
+                        showSaveToast();
+                      }}
+                      className="mt-1"
+                    />
+                    <div>
+                      <span style={{ fontWeight: 700, fontSize: 'var(--text-sm)', color: 'var(--color-text)' }}>
+                        {opt.label}
+                      </span>
+                      {opt.proximity && (
+                        <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)', marginLeft: '0.5rem' }}>
+                          — Proximité : {opt.proximity}
+                        </span>
+                      )}
+                      {opt.behavior && (
+                        <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)', marginTop: '0.25rem', lineHeight: 1.4 }}>
+                          {opt.behavior}
+                        </p>
+                      )}
+                      {opt.cta && (
+                        <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)', marginTop: '0.25rem', lineHeight: 1.4, fontFamily: 'var(--font-mono)' }}>
+                          CTA : {opt.cta}
+                        </p>
+                      )}
+                    </div>
+                  </label>
+                );
+              })}
+            </div>
+          );
+        }
         return (
           <select
             value={value}
-            onChange={(e) => handleFieldChange(field.id, e.target.value)}
+            onChange={(e) => {
+              const val = e.target.value;
+              updateProjectField(id, field.id, val);
+              const checklistId = FIELD_TO_CHECKLIST_MAP[field.id];
+              if (checklistId && val && !project.checklist?.[checklistId]) toggleChecklistItem(id, checklistId);
+              showSaveToast();
+            }}
             className="w-full"
           >
             <option value="">Sélectionner…</option>
@@ -332,6 +431,7 @@ export default function ProjectPage() {
             ))}
           </select>
         );
+      }
       case 'multicheck': {
         const selectedValues = value ? (Array.isArray(value) ? value : [value]) : [];
         return (
@@ -354,7 +454,10 @@ export default function ProjectPage() {
                     const newValues = e.target.checked
                       ? [...selectedValues, opt.id]
                       : selectedValues.filter(v => v !== opt.id);
-                    handleFieldChange(field.id, newValues);
+                    updateProjectField(id, field.id, newValues);
+                    const checklistId = FIELD_TO_CHECKLIST_MAP[field.id];
+                    if (checklistId && newValues.length > 0 && !project.checklist?.[checklistId]) toggleChecklistItem(id, checklistId);
+                    showSaveToast();
                   }}
                   className="mt-0.5"
                 />
@@ -373,6 +476,7 @@ export default function ProjectPage() {
             type="date"
             value={value}
             onChange={(e) => handleFieldChange(field.id, e.target.value)}
+            onBlur={() => { if (drafts[field.id] !== undefined) handleSaveField(field.id); }}
             className="w-full"
           />
         );
@@ -383,6 +487,7 @@ export default function ProjectPage() {
           <textarea
             value={value}
             onChange={(e) => handleFieldChange(field.id, e.target.value)}
+            onBlur={() => { if (drafts[field.id] !== undefined) handleSaveField(field.id); }}
             className="w-full resize-y font-mono"
             style={{ fontSize: 'var(--text-sm)' }}
             placeholder={field.columns ? field.columns.join(' | ') + '\n---\n...' : field.placeholder}
@@ -574,7 +679,14 @@ export default function ProjectPage() {
                 {isActive && currentPhase?.steps && (
                   <div className="pb-3 pl-7">
                     {currentPhase.steps.map((step, index) => {
-                      const sProgress = calculateStepProgress(project, step);
+                      const effectiveSidebarStep = step.id === 'step2_2'
+                        ? (() => {
+                            const fw = project?.fields?.framework;
+                            const v = STEP_2_2_VARIANTS[fw] || STEP_2_2_VARIANTS.default;
+                            return { ...step, title: v.title, checklist: v.checklist };
+                          })()
+                        : step;
+                      const sProgress = calculateStepProgress(project, effectiveSidebarStep);
                       const isStepActive = activeStep === step.id;
                       const isStepCompleted = sProgress === 100;
                       return (
@@ -604,7 +716,7 @@ export default function ProjectPage() {
                               textDecorationColor: 'var(--color-accent)',
                             }}
                           >
-                            {step.title}
+                            {effectiveSidebarStep.title}
                           </span>
                         </button>
                       );
@@ -912,22 +1024,28 @@ export default function ProjectPage() {
                               </span>
                             )}
                             {field.label}
-                            {FIELD_TO_CHECKLIST_MAP[field.id] && (
-                              <HelpTooltip content="Ce champ coche automatiquement l'élément correspondant dans la revue une fois rempli." />
+                            {(field.help || FIELD_TO_CHECKLIST_MAP[field.id]) && (
+                              <HelpTooltip content={
+                                field.help
+                                  ? field.help + (FIELD_TO_CHECKLIST_MAP[field.id] ? ' · Coche automatiquement l\'élément correspondant dans la revue.' : '')
+                                  : 'Ce champ coche automatiquement l\'élément correspondant dans la revue une fois rempli.'
+                              } />
                             )}
                           </label>
 
                           {isFilled && !isEditing && !hasDraft(field.id) && (
                             <button
                               onClick={() => setEditingField(field.id)}
-                              className="font-mono uppercase flex items-center gap-1.5 py-1 flex-shrink-0 transition-colors"
+                              className="font-mono uppercase flex items-center gap-1.5 flex-shrink-0 transition-colors"
                               style={{
                                 fontSize: 'var(--text-xs)',
                                 letterSpacing: '0.06em',
-                                color: 'var(--color-text-tertiary)',
+                                color: 'var(--color-text)',
+                                border: '1px solid var(--color-text)',
+                                padding: '0.375rem 0.75rem',
                               }}
-                              onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--color-accent)')}
-                              onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--color-text-tertiary)')}
+                              onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--color-accent)'; e.currentTarget.style.borderColor = 'var(--color-accent)'; }}
+                              onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--color-text)'; e.currentTarget.style.borderColor = 'var(--color-text)'; }}
                             >
                               <Edit3 size={11} />
                               <span>Modifier</span>
@@ -937,28 +1055,37 @@ export default function ProjectPage() {
                             <div className="flex items-center gap-3 flex-shrink-0">
                               <button
                                 onClick={() => handleCancelField(field.id)}
-                                className="font-mono uppercase flex items-center gap-1.5 py-1 transition-colors"
+                                onMouseDown={(e) => e.preventDefault()}
+                                className="font-mono uppercase flex items-center gap-1.5 transition-colors"
                                 style={{
                                   fontSize: 'var(--text-xs)',
                                   letterSpacing: '0.06em',
-                                  color: 'var(--color-text-tertiary)',
+                                  color: 'var(--color-text)',
+                                  border: '1px solid var(--color-text)',
+                                  padding: '0.375rem 0.75rem',
                                 }}
-                                onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--color-text)')}
-                                onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--color-text-tertiary)')}
+                                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'var(--color-text)'; e.currentTarget.style.color = 'var(--color-bg)'; }}
+                                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = 'var(--color-text)'; }}
                               >
                                 <span>Annuler</span>
                               </button>
                               <button
                                 onClick={() => handleSaveField(field.id)}
+                                onMouseDown={(e) => e.preventDefault()}
                                 disabled={!hasDraft(field.id)}
-                                className="font-mono uppercase flex items-center gap-1.5 py-1 transition-colors"
+                                className="font-mono uppercase flex items-center gap-1.5 transition-colors"
                                 style={{
                                   fontSize: 'var(--text-xs)',
                                   letterSpacing: '0.06em',
-                                  color: hasDraft(field.id) ? 'var(--color-accent)' : 'var(--color-text-tertiary)',
+                                  color: hasDraft(field.id) ? 'var(--color-bg)' : 'var(--color-text-tertiary)',
+                                  backgroundColor: hasDraft(field.id) ? 'var(--color-text)' : 'transparent',
+                                  border: hasDraft(field.id) ? '1px solid var(--color-text)' : '1px solid var(--color-text-tertiary)',
+                                  padding: '0.375rem 0.75rem',
                                   cursor: hasDraft(field.id) ? 'pointer' : 'not-allowed',
                                   opacity: hasDraft(field.id) ? 1 : 0.5,
                                 }}
+                                onMouseEnter={(e) => { if (hasDraft(field.id)) { e.currentTarget.style.backgroundColor = 'var(--color-accent)'; e.currentTarget.style.borderColor = 'var(--color-accent)'; } }}
+                                onMouseLeave={(e) => { if (hasDraft(field.id)) { e.currentTarget.style.backgroundColor = 'var(--color-text)'; e.currentTarget.style.borderColor = 'var(--color-text)'; } }}
                               >
                                 <Check size={11} />
                                 <span>Sauvegarder</span>

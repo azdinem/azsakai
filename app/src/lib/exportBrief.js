@@ -431,23 +431,24 @@ export async function downloadBriefPDF(project) {
       windowWidth: 794,
     });
 
-    const imgData = canvas.toDataURL('image/png');
     const pdf = new jsPDF('p', 'mm', 'a4');
-    const imgWidth = 210;
-    const pageHeight = 297;
-    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+    const pageWidthMm = 210;
+    const pageHeightMm = 297;
+    const pageWidthPx = canvas.width;
+    const pageHeightPx = Math.floor((pageHeightMm / pageWidthMm) * pageWidthPx);
+    const totalPages = Math.ceil(canvas.height / pageHeightPx);
 
-    let heightLeft = imgHeight;
-    let position = 0;
-
-    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-    heightLeft -= pageHeight;
-
-    while (heightLeft > 0) {
-      position = heightLeft - imgHeight;
-      pdf.addPage();
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
+    for (let i = 0; i < totalPages; i++) {
+      const sliceHeight = Math.min(pageHeightPx, canvas.height - i * pageHeightPx);
+      const pageCanvas = document.createElement('canvas');
+      pageCanvas.width = pageWidthPx;
+      pageCanvas.height = sliceHeight;
+      const ctx = pageCanvas.getContext('2d');
+      ctx.drawImage(canvas, 0, i * pageHeightPx, pageWidthPx, sliceHeight, 0, 0, pageWidthPx, sliceHeight);
+      const pageImg = pageCanvas.toDataURL('image/jpeg', 0.85);
+      const sliceHeightMm = (sliceHeight * pageWidthMm) / pageWidthPx;
+      if (i > 0) pdf.addPage();
+      pdf.addImage(pageImg, 'JPEG', 0, 0, pageWidthMm, sliceHeightMm);
     }
 
     const slug = slugify(project.title);
