@@ -15,8 +15,8 @@ const createNewProject = (data = {}) => ({
   updatedAt: new Date().toISOString(),
   checklist: {},
   fields: {},
-  currentPhase: 'phase1',
-  currentStep: 'step1_1',
+  currentPhase: 'phase0',
+  currentStep: 'step0_1',
 });
 
 export function DataProvider({ children }) {

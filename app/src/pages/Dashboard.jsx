@@ -335,6 +335,7 @@ export default function Dashboard() {
                       <div className="flex items-baseline gap-3 flex-wrap">
                         <h3
                           className="font-display truncate"
+                          title={project.title}
                           style={{
                             fontSize: 'var(--text-xl)',
                             lineHeight: 0.95,

@@ -13,6 +13,7 @@ import {
   calculateProgress,
   calculatePhaseProgress,
   calculateStepProgress,
+  calculatePhaseStepCompletion,
 } from '../data/processData';
 import {
   ChevronDown,
@@ -21,11 +22,14 @@ import {
   X,
   Menu,
   Edit3,
+  Maximize2,
+  Minimize2,
 } from '../components/Icons';
 import Confetti from '../components/Confetti';
 import Toast from '../components/Toast';
 import { SkeletonSidebar, SkeletonStepContent } from '../components/Skeleton';
 import KeyboardShortcuts from '../components/KeyboardShortcuts';
+import TableEditor from '../components/TableEditor';
 import { HelpTooltip } from '../components/Tooltip';
 import { downloadBriefMarkdown, downloadBriefPDF, getCompletionStats } from '../lib/exportBrief';
 
@@ -38,19 +42,24 @@ export default function ProjectPage() {
   const [activePhase, setActivePhase] = useState('phase0');
   const [activeStep, setActiveStep] = useState('step0_1');
   const [showSummary, setShowSummary] = useState(false);
+  const [summaryFullscreen, setSummaryFullscreen] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [lastCompletedPhase, setLastCompletedPhase] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [toast, setToast] = useState(null);
   const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState(false);
   const [editingField, setEditingField] = useState(null);
-  const [checklistOpen, setChecklistOpen] = useState(false);
+  const [checklistOpen, setChecklistOpen] = useState(true);
   // Drafts locaux par fieldId — la saisie reste en mémoire locale jusqu'au clic sur "Sauvegarder"
   const [drafts, setDrafts] = useState({});
   const draftsRef = useRef(drafts);
   useEffect(() => { draftsRef.current = drafts; }, [drafts]);
   const autoSaveTimerRef = useRef(null);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const [lastSavedAt, setLastSavedAt] = useState(null);
+  const [, setTick] = useState(0);
+  const [undoData, setUndoData] = useState(null);
+  const [pendingNav, setPendingNav] = useState(null);
 
   // Dériver le projet directement du context à chaque render (évite le décalage state local / context qui faisait perdre le focus aux inputs)
   const project = isLoading ? null : getProject(id);
@@ -89,8 +98,43 @@ export default function ProjectPage() {
 
   useEffect(() => {
     setSidebarOpen(false);
-    setChecklistOpen(false);
   }, [activeStep]);
+
+  useEffect(() => {
+    if (project?.updatedAt && !lastSavedAt) {
+      setLastSavedAt(new Date(project.updatedAt).getTime());
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
+
+  useEffect(() => {
+    if (!lastSavedAt) return;
+    const interval = setInterval(() => setTick(t => t + 1), 10000);
+    return () => clearInterval(interval);
+  }, [lastSavedAt]);
+
+  useEffect(() => {
+    if (!undoData) return;
+    const timer = setTimeout(() => setUndoData(null), 10000);
+    return () => clearTimeout(timer);
+  }, [undoData]);
+
+  const formatRelativeTime = (ts) => {
+    if (!ts) return null;
+    const s = Math.floor((Date.now() - ts) / 1000);
+    if (s < 5) return 'à l\'instant';
+    if (s < 60) return `il y a ${s}s`;
+    const m = Math.floor(s / 60);
+    if (m < 60) return `il y a ${m}min`;
+    return `il y a ${Math.floor(m / 60)}h`;
+  };
+
+  const handleUndo = () => {
+    if (!undoData) return;
+    updateProjectField(id, undoData.fieldId, undoData.previousValue);
+    setToast({ message: 'Modification annulée', type: 'success' });
+    setUndoData(null);
+  };
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -109,6 +153,17 @@ export default function ProjectPage() {
         case 'ArrowRight':
           if (currentIndex < allSteps.length - 1) {
             const nextStep = allSteps[currentIndex + 1];
+            const curRawStep = allSteps[currentIndex];
+            const curStepData = PHASES.flatMap(p => p.steps).find(s => s.id === curRawStep.id);
+            if (curStepData?.checklist?.length > 0) {
+              const stored = JSON.parse(localStorage.getItem('contentprocess_projects') || '[]');
+              const proj = stored.find(p => p.id === id);
+              const unchk = curStepData.checklist.filter(c => !proj?.checklist?.[c.id]);
+              if (unchk.length > 0) {
+                setPendingNav({ phaseId: nextStep.phaseId, stepId: nextStep.id, uncheckedCount: unchk.length });
+                break;
+              }
+            }
             setActivePhase(nextStep.phaseId);
             setActiveStep(nextStep.id);
             updateProject(id, { currentPhase: nextStep.phaseId, currentStep: nextStep.id });
@@ -140,6 +195,7 @@ export default function ProjectPage() {
   const handleSilentSave = useCallback((fieldId) => {
     const draftValue = draftsRef.current[fieldId];
     if (draftValue === undefined) return;
+    const previousValue = getProject(id)?.fields?.[fieldId] ?? '';
     updateProjectField(id, fieldId, draftValue);
     setDrafts(prev => {
       const next = { ...prev };
@@ -153,8 +209,10 @@ export default function ProjectPage() {
     if (checklistId && hasContent) {
       toggleChecklistItem(id, checklistId);
     }
+    setLastSavedAt(Date.now());
+    setUndoData({ fieldId, previousValue, savedAt: Date.now() });
     setToast({ message: 'Auto-sauvegardé', type: 'success' });
-  }, [id, updateProjectField, toggleChecklistItem]);
+  }, [id, updateProjectField, toggleChecklistItem, getProject]);
 
   useEffect(() => {
     return () => { if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current); };
@@ -210,11 +268,38 @@ export default function ProjectPage() {
     updateProject(id, { currentStep: stepId });
   };
 
-  const handleFieldChange = (fieldId, value) => {
+  const navigateToStep = (targetPhaseId, targetStepId) => {
+    setActivePhase(targetPhaseId);
+    setActiveStep(targetStepId);
+    updateProject(id, { currentPhase: targetPhaseId, currentStep: targetStepId });
+  };
+
+  const handleNextWithCheck = (targetPhaseId, targetStepId) => {
+    if (currentStep?.checklist?.length > 0) {
+      const unchecked = currentStep.checklist.filter(c => !project.checklist?.[c.id]);
+      if (unchecked.length > 0) {
+        setPendingNav({ phaseId: targetPhaseId, stepId: targetStepId, uncheckedCount: unchecked.length });
+        return;
+      }
+    }
+    navigateToStep(targetPhaseId, targetStepId);
+  };
+
+  const confirmNav = () => {
+    if (pendingNav) {
+      navigateToStep(pendingNav.phaseId, pendingNav.stepId);
+      setPendingNav(null);
+    }
+  };
+
+  const cancelNav = () => setPendingNav(null);
+
+  const handleFieldChange = (fieldId, value, fieldType) => {
     setDrafts(prev => ({ ...prev, [fieldId]: value }));
     setEditingField(fieldId);
     if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
-    autoSaveTimerRef.current = setTimeout(() => handleSilentSave(fieldId), 30000);
+    const delay = fieldType === 'text' || fieldType === 'date' ? 5000 : 30000;
+    autoSaveTimerRef.current = setTimeout(() => handleSilentSave(fieldId), delay);
   };
 
   const hasDraft = (fieldId) => drafts[fieldId] !== undefined;
@@ -226,8 +311,11 @@ export default function ProjectPage() {
       setEditingField(null);
       return;
     }
+    const previousValue = project?.fields?.[fieldId] ?? '';
     updateProjectField(id, fieldId, draftValue);
     showSaveToast();
+    setLastSavedAt(Date.now());
+    setUndoData({ fieldId, previousValue, savedAt: Date.now() });
     setEditingField(null);
     setDrafts(prev => {
       const next = { ...prev };
@@ -337,7 +425,7 @@ export default function ProjectPage() {
           <input
             type="text"
             value={value}
-            onChange={(e) => handleFieldChange(field.id, e.target.value)}
+            onChange={(e) => handleFieldChange(field.id, e.target.value, 'text')}
             onBlur={() => { if (drafts[field.id] !== undefined) handleSaveField(field.id); }}
             className="w-full"
             placeholder={field.placeholder}
@@ -357,7 +445,7 @@ export default function ProjectPage() {
           />
         );
       case 'select': {
-        const isRichSelect = field.options === 'READER_PROFILES';
+        const isRichSelect = field.options === 'READER_PROFILES' || field.options === 'FRAMEWORKS';
         if (isRichSelect) {
           return (
             <div style={{ border: '1px solid var(--color-text)' }}>
@@ -404,6 +492,16 @@ export default function ProjectPage() {
                       {opt.cta && (
                         <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)', marginTop: '0.25rem', lineHeight: 1.4, fontFamily: 'var(--font-mono)' }}>
                           CTA : {opt.cta}
+                        </p>
+                      )}
+                      {opt.usage && (
+                        <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)', marginTop: '0.25rem', lineHeight: 1.4 }}>
+                          {opt.usage}
+                        </p>
+                      )}
+                      {opt.structure && (
+                        <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)', marginTop: '0.25rem', lineHeight: 1.4, fontFamily: 'var(--font-mono)' }}>
+                          {opt.structure}
                         </p>
                       )}
                     </div>
@@ -475,7 +573,7 @@ export default function ProjectPage() {
           <input
             type="date"
             value={value}
-            onChange={(e) => handleFieldChange(field.id, e.target.value)}
+            onChange={(e) => handleFieldChange(field.id, e.target.value, 'date')}
             onBlur={() => { if (drafts[field.id] !== undefined) handleSaveField(field.id); }}
             className="w-full"
           />
@@ -483,6 +581,17 @@ export default function ProjectPage() {
       case 'paa_table':
       case 'info_gain_table':
       case 'table':
+        if (field.columns) {
+          return (
+            <TableEditor
+              value={value}
+              columns={field.columns}
+              onChange={(val) => handleFieldChange(field.id, val)}
+              onBlur={() => { if (drafts[field.id] !== undefined) handleSaveField(field.id); }}
+              placeholder={field.placeholder}
+            />
+          );
+        }
         return (
           <textarea
             value={value}
@@ -490,7 +599,7 @@ export default function ProjectPage() {
             onBlur={() => { if (drafts[field.id] !== undefined) handleSaveField(field.id); }}
             className="w-full resize-y font-mono"
             style={{ fontSize: 'var(--text-sm)' }}
-            placeholder={field.columns ? field.columns.join(' | ') + '\n---\n...' : field.placeholder}
+            placeholder={field.placeholder}
             rows={field.rows || 6}
           />
         );
@@ -570,6 +679,7 @@ export default function ProjectPage() {
         <input
           type="text"
           value={project.title}
+          title={project.title}
           onChange={(e) => handleTitleChange(e.target.value)}
           className="font-display w-full"
           style={{
@@ -640,6 +750,7 @@ export default function ProjectPage() {
             const pProgress = calculatePhaseProgress(project, phase);
             const isActive = phase.id === activePhase;
             const isPhaseCompleted = pProgress === 100;
+            const stepCompletion = calculatePhaseStepCompletion(project, phase);
             return (
               <div key={phase.id} style={{ borderBottom: '1px solid var(--color-text)' }}>
                 <button
@@ -661,7 +772,7 @@ export default function ProjectPage() {
                     {isPhaseCompleted ? '✓' : String(phase.number).padStart(2, '0')}
                   </span>
                   <span
-                    className="font-display"
+                    className="font-display flex-1"
                     style={{
                       fontSize: 'var(--text-xs)',
                       fontWeight: isActive ? 800 : 600,
@@ -672,6 +783,15 @@ export default function ProjectPage() {
                     }}
                   >
                     {phase.title}
+                  </span>
+                  <span
+                    className="font-mono"
+                    style={{
+                      fontSize: 'var(--text-xs)',
+                      color: isPhaseCompleted ? 'var(--color-accent)' : 'var(--color-text-tertiary)',
+                    }}
+                  >
+                    {stepCompletion.completed}/{stepCompletion.total}
                   </span>
                 </button>
 
@@ -905,7 +1025,35 @@ export default function ProjectPage() {
                     color: 'var(--color-text)',
                   }}
                 >
-                  Chapitre {currentPhase?.number} — 09
+                  Chapitre {currentPhase?.number} — 09 · {calculatePhaseProgress(project, currentPhase)}%
+                </span>
+                <span className="flex items-baseline gap-3">
+                  {lastSavedAt && (
+                    <span
+                      className="font-mono"
+                      style={{
+                        fontSize: 'var(--text-xs)',
+                        color: 'var(--color-text-tertiary)',
+                      }}
+                    >
+                      Sauvegarde {formatRelativeTime(lastSavedAt)}
+                    </span>
+                  )}
+                  {undoData && (
+                    <button
+                      onClick={handleUndo}
+                      className="font-mono uppercase transition-colors"
+                      style={{
+                        fontSize: 'var(--text-xs)',
+                        letterSpacing: '0.08em',
+                        color: 'var(--color-accent)',
+                        textDecoration: 'underline',
+                        textUnderlineOffset: '2px',
+                      }}
+                    >
+                      Annuler
+                    </button>
+                  )}
                 </span>
                 <span className="section-index">
                   Étape {String(currentStep.number).padStart(2, '0')}
@@ -999,7 +1147,7 @@ export default function ProjectPage() {
                     const displayValue = getDisplayValue(field);
                     return (
                       <div key={field.id} className="field-card">
-                        <div className="flex items-start justify-between gap-4 mb-3">
+                        <div className="flex items-start justify-between gap-4 mb-3 flex-wrap">
                           <label
                             className="font-display flex items-baseline gap-2"
                             style={{
@@ -1194,8 +1342,9 @@ export default function ProjectPage() {
                           <span
                             style={{
                               fontSize: 'var(--text-sm)',
-                              color: isChecked ? 'var(--color-text-tertiary)' : 'var(--color-text)',
+                              color: isChecked ? 'var(--color-text-secondary)' : 'var(--color-text)',
                               textDecoration: isChecked ? 'line-through' : 'none',
+                              textDecorationColor: isChecked ? 'var(--color-text-tertiary)' : undefined,
                               lineHeight: 1.5,
                             }}
                           >
@@ -1280,9 +1429,7 @@ export default function ProjectPage() {
               {nextStep ? (
                 <button
                   onClick={() => {
-                    setActivePhase(nextStep.phaseId);
-                    setActiveStep(nextStep.id);
-                    updateProject(id, { currentPhase: nextStep.phaseId, currentStep: nextStep.id });
+                    handleNextWithCheck(nextStep.phaseId, nextStep.id);
                   }}
                   className="text-right group"
                 >
@@ -1484,16 +1631,78 @@ export default function ProjectPage() {
 
       <KeyboardShortcuts isOpen={showKeyboardShortcuts} onClose={() => setShowKeyboardShortcuts(false)} />
 
+      {pendingNav && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center">
+          <div
+            className="absolute inset-0"
+            style={{ backgroundColor: 'rgb(0 0 0 / 0.35)' }}
+            onClick={cancelNav}
+          />
+          <div
+            className="relative mx-4 w-full max-w-sm p-8"
+            style={{
+              backgroundColor: 'var(--color-bg)',
+              border: '1px solid var(--color-text)',
+            }}
+          >
+            <p
+              className="font-display uppercase mb-2"
+              style={{ fontSize: 'var(--text-md)', lineHeight: 1.1 }}
+            >
+              Étape incomplète
+            </p>
+            <p
+              className="mb-6"
+              style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)', lineHeight: 1.5 }}
+            >
+              {pendingNav.uncheckedCount} élément{pendingNav.uncheckedCount > 1 ? 's' : ''} non validé{pendingNav.uncheckedCount > 1 ? 's' : ''} dans la revue de l'étape. Continuer quand même ?
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={cancelNav}
+                className="font-mono uppercase transition-colors"
+                style={{
+                  fontSize: 'var(--text-xs)',
+                  letterSpacing: '0.08em',
+                  border: '1px solid var(--color-text)',
+                  padding: '0.5rem 1rem',
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'var(--color-text)'; e.currentTarget.style.color = 'var(--color-bg)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = 'var(--color-text)'; }}
+              >
+                Rester
+              </button>
+              <button
+                onClick={confirmNav}
+                className="font-mono uppercase transition-colors"
+                style={{
+                  fontSize: 'var(--text-xs)',
+                  letterSpacing: '0.08em',
+                  backgroundColor: 'var(--color-accent)',
+                  color: 'var(--color-bg)',
+                  border: '1px solid var(--color-accent)',
+                  padding: '0.5rem 1rem',
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.opacity = '0.85'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.opacity = '1'; }}
+              >
+                Continuer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Summary panel */}
       {showSummary && (
         <div className="fixed inset-0 z-50 flex">
           <div
             className="absolute inset-0 sidebar-overlay"
             style={{ backgroundColor: 'rgb(0 0 0 / 0.35)' }}
-            onClick={() => setShowSummary(false)}
+            onClick={() => { setShowSummary(false); setSummaryFullscreen(false); }}
           />
           <div
-            className="absolute right-0 top-0 bottom-0 w-full max-w-xl slide-panel overflow-hidden flex flex-col"
+            className={`absolute right-0 top-0 bottom-0 w-full ${summaryFullscreen ? 'max-w-none' : 'max-w-xl'} slide-panel overflow-hidden flex flex-col`}
             style={{
               backgroundColor: 'var(--color-bg)',
               borderLeft: '1px solid var(--color-text)',
@@ -1518,15 +1727,27 @@ export default function ProjectPage() {
                   {project.title}
                 </h2>
               </div>
-              <button
-                onClick={() => setShowSummary(false)}
-                className="p-2 transition-colors"
-                style={{ color: 'var(--color-text)' }}
-                onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--color-accent)')}
-                onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--color-text)')}
-              >
-                <X size={16} />
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setSummaryFullscreen(f => !f)}
+                  className="p-2 transition-colors"
+                  style={{ color: 'var(--color-text)' }}
+                  onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--color-accent)')}
+                  onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--color-text)')}
+                  title={summaryFullscreen ? 'Réduire' : 'Plein écran'}
+                >
+                  {summaryFullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+                </button>
+                <button
+                  onClick={() => { setShowSummary(false); setSummaryFullscreen(false); }}
+                  className="p-2 transition-colors"
+                  style={{ color: 'var(--color-text)' }}
+                  onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--color-accent)')}
+                  onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--color-text)')}
+                >
+                  <X size={16} />
+                </button>
+              </div>
             </div>
 
             <div className="flex-1 overflow-y-auto px-8 py-8">

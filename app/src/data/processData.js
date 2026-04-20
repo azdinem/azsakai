@@ -760,3 +760,13 @@ export const calculateStepProgress = (projectData, step) => {
 
   return totalChecks > 0 ? Math.round((completedChecks / totalChecks) * 100) : 0;
 };
+
+export const calculatePhaseStepCompletion = (projectData, phase) => {
+  let completed = 0;
+  const total = phase.steps.length;
+  phase.steps.forEach(step => {
+    const hasChecked = step.checklist.some(c => projectData?.checklist?.[c.id]);
+    if (hasChecked) completed++;
+  });
+  return { completed, total };
+};

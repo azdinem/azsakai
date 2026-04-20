@@ -55,6 +55,8 @@ import {
   ListChecks,
   Keyboard,
   HelpCircle,
+  Maximize2,
+  Minimize2,
 } from 'lucide-react';
 
 // Map des icônes par nom
@@ -114,6 +116,8 @@ const iconMap = {
   ListChecks,
   Keyboard,
   HelpCircle,
+  Maximize2,
+  Minimize2,
 };
 
 // Composant Icon générique
@@ -185,4 +189,6 @@ export {
   ListChecks,
   Keyboard,
   HelpCircle,
+  Maximize2,
+  Minimize2,
 };
